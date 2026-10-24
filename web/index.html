@@ -11,6 +11,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="static/site.css">
+<script>
+  // Apply the saved theme before first paint (static/site.js handles the toggle).
+  try {
+    var t = localStorage.getItem("theme");
+    if (t) document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
 </head>
 <body>
 
@@ -22,6 +29,10 @@
     <a class="link" href="#detecta">Detección</a>
     <a class="link" href="#fakeprints">Fakeprints</a>
     <a class="link" href="#recursos">Recursos</a>
+    <button class="theme-toggle" type="button" aria-label="Cambiar a modo oscuro">
+      <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+    </button>
   </div>
 </nav>
 
@@ -33,7 +44,7 @@
       <h1>Detección de música generada por IA</h1>
       <p class="subtitle">Cómo se genera la música con IA, cómo se detecta y por qué no es tan fácil como parece.</p>
       <p class="author">Fernando Garcia de la Cruz</p>
-      <p class="affil">Research engineer · machine learning y procesamiento de señales para audio y música</p>
+      <p class="affil">Research engineer · machine learning y procesamiento digital de señales para audio y música</p>
       <div class="buttons">
         <a class="btn primary" href="assets/slides/pyday26mx-ai-music-detection.pdf"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Slides</a>
         <a class="btn" href="https://github.com/fergarciadlc/pyday26-ai-music-detection"><svg viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>Código</a>
@@ -52,8 +63,11 @@
   <div class="wrap">
     <p class="kicker">Antes de empezar</p>
     <h2>¿Cuál es IA?</h2>
-    <div class="prose"><p>Escucha estos fragmentos y trata de adivinar cuáles hizo una persona y cuáles una inteligencia artificial.</p></div>
+    <div class="prose"><p>Así empezó la charla: seis fragmentos de canciones. Escúchalos y trata de adivinar cuáles hizo una persona y cuáles una inteligencia artificial.</p></div>
 
+    <button class="btn primary quiz-open" type="button" aria-expanded="false" aria-controls="quiz-body"><span>Hacer el experimento</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+
+    <div class="collapse" id="quiz-body"><div>
     <div class="pd-quiz">
       <article class="pd-clip" data-answer="human">
         <header><span class="pd-clip-n">1</span></header>
@@ -93,6 +107,7 @@
       </article>
     </div>
     <p><button class="btn pd-reveal-all" type="button">Revelar todas</button></p>
+    </div></div>
 
     <div class="grid c2" style="margin-top:28px">
       <div class="card stat"><b>97%</b><span>no supo distinguir una canción hecha con IA de una hecha por personas.</span></div>
@@ -245,6 +260,7 @@ loss_fn = nn.BCEWithLogitsLoss()</code></pre>
   </div>
 </footer>
 
+<script src="static/site.js"></script>
 <script src="assets/js/quiz.js"></script>
 <script src="static/codec.js"></script>
 <script src="static/players.js"></script>

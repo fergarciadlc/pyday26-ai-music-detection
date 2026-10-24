@@ -558,10 +558,13 @@
       renderPlay();
       renderAll();
       new ResizeObserver(() => { drawFold(); drawSpectrum(); }).observe(root);
-      // Redraw on theme changes: MkDocs toggles an attribute, plain pages follow the OS.
+      // Redraw on theme changes: MkDocs toggles an attribute on <body>, the plain page
+      // sets data-theme on <html>, and both may follow the OS.
       const retheme = () => { renderTiles(); drawFold(); drawSpectrum(); };
       new MutationObserver(retheme)
         .observe(document.body, { attributes: true, attributeFilter: ["data-md-color-scheme"] });
+      new MutationObserver(retheme)
+        .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme);
     })
     .catch((err) => {
