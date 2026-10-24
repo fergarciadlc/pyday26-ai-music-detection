@@ -92,8 +92,21 @@ def write_mp3(y: np.ndarray, path: Path) -> None:
     with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
         sf.write(tmp.name, y, SR)
         subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", tmp.name,
-             "-codec:a", "libmp3lame", "-b:a", "128k", "-map_metadata", "-1", str(path)],
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                tmp.name,
+                "-codec:a",
+                "libmp3lame",
+                "-b:a",
+                "128k",
+                "-map_metadata",
+                "-1",
+                str(path),
+            ],
             check=True,
         )
 
@@ -137,7 +150,10 @@ def main() -> None:
             write_mp3(0.9 * diff / np.max(np.abs(diff)), args.out / f"diff_{key}.mp3")
             spectrogram_image(diff, args.out / f"diff_{key}.jpg")
         data["versions"][key] = entry
-        print(f"{key:>8}: comb {entry['comb_db']:+.2f} dB" + (f", SNR {entry['snr_db']} dB" if "snr_db" in entry else ""))
+        print(
+            f"{key:>8}: comb {entry['comb_db']:+.2f} dB"
+            + (f", SNR {entry['snr_db']} dB" if "snr_db" in entry else "")
+        )
 
     (args.out / "data.json").write_text(json.dumps(data, separators=(",", ":")))
 

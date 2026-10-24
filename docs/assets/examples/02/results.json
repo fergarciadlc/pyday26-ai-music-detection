@@ -1,0 +1,25 @@
+{
+  "samples": 416689,
+  "latents": [
+    1,
+    128,
+    1303
+  ],
+  "codes": [
+    4,
+    1,
+    1303
+  ],
+  "compression": 128,
+  "fingerprint_db": {
+    "original": 0.7,
+    "reconstruction": 4.8,
+    "noise_small": 3.5,
+    "noise_large": 4.0,
+    "reversed": 3.2,
+    "frozen": 15.0,
+    "random_latents": 2.6,
+    "random_codes": 0.6,
+    "zeros": 31.5
+  }
+}

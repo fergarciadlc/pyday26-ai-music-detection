@@ -27,12 +27,12 @@ hablemos de detección.
 Vamos a abrir un codec con Python y ver todo esto con nuestros propios ojos (y oídos). Usaremos
 [EnCodec](https://huggingface.co/facebook/encodec_24khz), el codec de Meta que usan modelos como
 MusicGen, y una grabación mía de guitarra. El script completo está en
-[`examples/02_codec_latentes.py`](https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/02_codec_latentes.py).
+[`examples/02_codec_latents.py`](https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/02_codec_latents.py).
 
 ## 1. Cargar el codec y el audio
 
 ```python
---8<-- "examples/02_codec_latentes.py:cargar"
+--8<-- "examples/02_codec_latents.py:load"
 ```
 
 <div class="pd-exps">
@@ -45,7 +45,7 @@ MusicGen, y una grabación mía de guitarra. El script completo está en
 ## 2. El encoder: de audio a latentes
 
 ```python
---8<-- "examples/02_codec_latentes.py:encoder"
+--8<-- "examples/02_codec_latents.py:encoder"
 ```
 
 Los 416,689 números del audio se convirtieron en una "imagen" de 128 × 1,303. Cada columna
@@ -57,15 +57,15 @@ Para guardar o transmitir el audio, EnCodec da un paso más: cambia cada columna
 por unos pocos números enteros, como si buscara la palabra más parecida en un diccionario.
 
 ```python
---8<-- "examples/02_codec_latentes.py:codigos"
+--8<-- "examples/02_codec_latents.py:codes"
 ```
 
-![Latentes y códigos de los primeros 4 segundos](assets/examples/02/latentes.png){ .pd-figure }
+![Latentes y códigos de los primeros 4 segundos](assets/examples/02/latents.png){ .pd-figure }
 
 ## 4. El decoder: de vuelta al audio
 
 ```python
---8<-- "examples/02_codec_latentes.py:decoder"
+--8<-- "examples/02_codec_latents.py:decoder"
 ```
 
 <div class="pd-exps">
@@ -75,7 +75,7 @@ por unos pocos números enteros, como si buscara la palabra más parecida en un 
   </div>
   <div class="pd-exp">
     <p class="pd-exp-title">Reconstruida desde los códigos</p>
-    <audio controls preload="none" src="../assets/examples/02/reconstruccion.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/reconstruction.mp3"></audio>
     <p>Un archivo 128 veces más pequeño y suena casi igual.</p>
   </div>
 </div>
@@ -85,28 +85,28 @@ por unos pocos números enteros, como si buscara la palabra más parecida en un 
 Ahora lo divertido: modificamos los latentes antes de pasarlos por el decoder.
 
 ```python
---8<-- "examples/02_codec_latentes.py:modificar"
+--8<-- "examples/02_codec_latents.py:modify"
 ```
 
 <div class="pd-exps">
   <div class="pd-exp">
     <p class="pd-exp-title">Un poco de ruido</p>
-    <audio controls preload="none" src="../assets/examples/02/ruido_poco.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/noise_small.mp3"></audio>
     <p>Sigue siendo la guitarra, un poco más brillante. El decoder aguanta cambios pequeños.</p>
   </div>
   <div class="pd-exp">
     <p class="pd-exp-title">Mucho ruido</p>
-    <audio controls preload="none" src="../assets/examples/02/ruido_mucho.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/noise_large.mp3"></audio>
     <p>La guitarra se pierde casi por completo.</p>
   </div>
   <div class="pd-exp">
     <p class="pd-exp-title">Al revés</p>
-    <audio controls preload="none" src="../assets/examples/02/al_reves.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/reversed.mp3"></audio>
     <p>Los mismos latentes en orden inverso. Ojo: no es lo mismo que poner el audio en reversa.</p>
   </div>
   <div class="pd-exp">
     <p class="pd-exp-title">Un instante congelado</p>
-    <audio controls preload="none" src="../assets/examples/02/congelado.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/frozen.mp3"></audio>
     <p>Repetimos el frame del segundo 3 durante todo el audio: un sonido sostenido, sin ataques.</p>
   </div>
 </div>
@@ -117,23 +117,23 @@ Ahora lo divertido: modificamos los latentes antes de pasarlos por el decoder.
 hace un modelo generativo.
 
 ```python
---8<-- "examples/02_codec_latentes.py:inventar"
+--8<-- "examples/02_codec_latents.py:invent"
 ```
 
 <div class="pd-exps">
   <div class="pd-exp">
     <p class="pd-exp-title">Latentes aleatorios</p>
-    <audio controls preload="none" src="../assets/examples/02/aleatorios.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/random_latents.mp3"></audio>
     <p>Números al azar con la misma escala que los reales: suena a ruido.</p>
   </div>
   <div class="pd-exp">
     <p class="pd-exp-title">Códigos aleatorios</p>
-    <audio controls preload="none" src="../assets/examples/02/codigos_aleatorios.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/random_codes.mp3"></audio>
     <p>Palabras al azar del diccionario: ruido entrecortado, sin nada de música.</p>
   </div>
   <div class="pd-exp">
     <p class="pd-exp-title">Todo en cero</p>
-    <audio controls preload="none" src="../assets/examples/02/ceros.mp3"></audio>
+    <audio controls preload="none" src="../assets/examples/02/zeros.mp3"></audio>
     <p>Sin información, el decoder igual produce algo: un zumbido constante. Guárdalo en mente.</p>
   </div>
 </div>
@@ -150,7 +150,7 @@ En la [página de fakeprints](detecta/fakeprints.md) vemos que el decoder de EnC
 en múltiplos de 600 Hz. Medimos esos picos en todo lo que acabamos de generar:
 
 ```python
---8<-- "examples/02_codec_latentes.py:huella"
+--8<-- "examples/02_codec_latents.py:fingerprint"
 ```
 
 | Audio | Picos en múltiplos de 600 Hz |

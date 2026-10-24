@@ -198,9 +198,9 @@
     .then((r) => r.json())
     .then((media) => {
       inW = pwave(inWaveHolder, 20, 130, media.original.wave);
-      outW = pwave(outWaveHolder, 705, 150, media.reconstruccion.wave);
+      outW = pwave(outWaveHolder, 705, 150, media.reconstruction.wave);
       const big = [];
-      for (let i = 0; i < 2; i++) big.push(...media.reconstruccion.wave);
+      for (let i = 0; i < 2; i++) big.push(...media.reconstruction.wave);
       wave(bigWaveHolder, 528, 420, big.slice(0, 150), "w-out");
     })
     .catch(() => {

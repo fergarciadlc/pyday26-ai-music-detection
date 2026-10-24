@@ -1,6 +1,6 @@
 """Media for the v2 page: spectrograms of the codec examples and waveforms for the diagram.
 
-Reads the audio written by examples/02_codec_latentes.py and writes:
+Reads the audio written by examples/02_codec_latents.py and writes:
 - web/static/spec/<name>.jpg: spectrograms on a shared dB scale, so they can be compared
   (the example saves every clip at the same loudness);
 - web/static/media.json: durations and a coarse waveform envelope per clip.
@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 SR = 24_000
 SRC = Path("docs/assets/examples/02")
 OUT = Path("web/static")
-NAMES = ["original", "reconstruccion", "aleatorios", "ceros"]
+NAMES = ["original", "reconstruction", "random_latents", "zeros"]
 CMAP = LinearSegmentedColormap.from_list(
     "pyday", ["#070a1f", "#1d2a7a", "#7a1fa2", "#e0267d", "#ff8a3d", "#ffe27a"]
 )
@@ -46,7 +46,14 @@ def main() -> None:
         freqs = librosa.fft_frequencies(sr=SR, n_fft=1024)
         S_db = np.stack([np.interp(WARP, freqs, col) for col in S_db.T], axis=1)[::-1]
         S_db = zoom(S_db, (1, WIDTH / S_db.shape[1]), order=1)
-        plt.imsave(OUT / "spec" / f"{name}.jpg", S_db, cmap=CMAP, vmin=-RANGE_DB, vmax=0, pil_kwargs={"quality": 86})
+        plt.imsave(
+            OUT / "spec" / f"{name}.jpg",
+            S_db,
+            cmap=CMAP,
+            vmin=-RANGE_DB,
+            vmax=0,
+            pil_kwargs={"quality": 86},
+        )
 
         y = audio[name]
         bars = np.array_split(np.abs(y), 96)

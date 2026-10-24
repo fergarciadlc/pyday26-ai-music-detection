@@ -8,9 +8,9 @@
 
   const CLIPS = [
     { name: "original", title: "Original", desc: "Mi guitarra, sin pasar por el codec.", mode: "codec" },
-    { name: "reconstruccion", title: "Reconstruida", desc: "Encoder → códigos → decoder. Casi igual, 128 veces más chico.", mode: "codec" },
-    { name: "aleatorios", title: "Latentes al azar", desc: "Números al azar en vez de latentes: ruido.", mode: "gen", gen: ["Ruido aleatorio", "torch.randn_like(latentes)"] },
-    { name: "ceros", title: "Latentes en cero", desc: "Sin información el decoder igual suena: su huella.", mode: "gen", gen: ["Nada (ceros)", "torch.zeros_like(latentes)"] },
+    { name: "reconstruction", title: "Reconstruida", desc: "Encoder → códigos → decoder. Casi igual, 128 veces más chico.", mode: "codec" },
+    { name: "random_latents", title: "Latentes al azar", desc: "Números al azar en vez de latentes: ruido.", mode: "gen", gen: ["Ruido aleatorio", "torch.randn_like(latents)"] },
+    { name: "zeros", title: "Latentes en cero", desc: "Sin información el decoder igual suena: su huella.", mode: "gen", gen: ["Nada (ceros)", "torch.zeros_like(latents)"] },
   ];
   const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';

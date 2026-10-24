@@ -1,7 +1,7 @@
 [project]
 name = "pyday26-ai-music-detection"
 version = "0.1.0"
-description = "Companion website and material for the PyDay México 2026 talk «¿Suena a IA? Detección de música generada por IA»"
+description = "Companion website and material for the PyDay México 2026 talk «Detección de música generada por IA»"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = []
@@ -15,6 +15,7 @@ site = [
 audio = [
     "librosa>=0.10",
     "musdb>=0.4",
+    "pyloudnorm>=0.1",
     "matplotlib>=3.8",
     "numpy>=1.26",
     "scipy>=1.11",
@@ -26,3 +27,16 @@ audio = [
 [tool.uv]
 default-groups = ["site"]
 package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Examples are notebook-style scripts (# %% cells): imports appear where they are first used.
+"examples/*" = ["E402"]
+# matplotlib.use("Agg") must run before pyplot is imported.
+"scripts/*" = ["E402"]

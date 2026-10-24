@@ -41,8 +41,8 @@ Each example is a plain script (with `# %%` cells, so it also opens as a noteboo
 or Jupyter).
 
 ```bash
-uv run --group audio examples/01_espectrogramas.py
-uv run --group audio examples/02_codec_latentes.py
+uv run --group audio examples/01_spectrograms.py
+uv run --group audio examples/02_codec_latents.py
 uv run --group audio examples/03_detector_pytorch.py   # downloads the MUSDB18 7 s sample (~140 MB) to ~/MUSDB18
 ```
 

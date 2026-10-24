@@ -44,7 +44,7 @@ versión gratuita de 7 segundos por canción (144 canciones). Separamos entrenam
 recordarla.
 
 ```python
---8<-- "examples/03_detector_pytorch.py:datos"
+--8<-- "examples/03_detector_pytorch.py:data"
 ```
 
 ## El modelo: una CNN
@@ -55,7 +55,7 @@ imagen, luego un promedio global y al final una capa que nos dice si el audio es
 por el decoder. Es la misma estructura que vimos en la charla.
 
 ```python
---8<-- "examples/03_detector_pytorch.py:modelo"
+--8<-- "examples/03_detector_pytorch.py:model"
 ```
 
 ## Entrenamiento
@@ -64,7 +64,7 @@ El loop de entrenamiento de PyTorch de toda la vida: revolvemos los ejemplos, ca
 pérdida, propagamos el error hacia atrás y actualizamos los pesos.
 
 ```python
---8<-- "examples/03_detector_pytorch.py:entrenamiento"
+--8<-- "examples/03_detector_pytorch.py:training"
 ```
 
 <div class="pd-band" markdown>
@@ -85,13 +85,13 @@ La verdad es que no. Probemos el detector con audio que nunca vio: mi grabación
 versión de EnCodec) y los clips de Suno del [experimento del inicio](../quiz.md).
 
 ```python
---8<-- "examples/03_detector_pytorch.py:nuevos"
+--8<-- "examples/03_detector_pytorch.py:unseen"
 ```
 
 | Audio | Qué es | Probabilidad de "IA" | ¿Acertó? |
 |---|---|---|---|
-| Mi guitarra | Humana | 0.00 | :material-check: |
-| Mi guitarra + EnCodec | Pasó por el decoder que conoce | 0.98 | :material-check: |
+| Mi guitarra | Humana | 0.0–0.9 (cambia en cada entrenamiento) | :material-help: |
+| Mi guitarra + EnCodec | Pasó por el decoder que conoce | ≈ 1.00 | :material-check: |
 | Clip 3 | IA (Suno) | 0.00 | :material-close: |
 | Clip 4 | Híbrida (mi guitarra + base de Suno) | 0.00 | :material-close: |
 | Clip 5 | IA (Suno) | 0.00 | :material-close: |
@@ -102,8 +102,9 @@ El detector reconoce perfecto el decoder que conoce, pero:
   seguridad. Cada plataforma tiene su propio decoder y su propia huella, así que cada generador
   nuevo exige volver a entrenar el detector. Y conforme la detección mejora, las plataformas
   pueden hacer que sus modelos dejen menos huellas: es una carrera armamentista.
-- **Es frágil ante transformaciones.** Cambiar el tono o recomprimir el audio puede borrar parte
-  de la huella, y el detector deja de reconocerla.
+- **Es frágil con audio distinto al de entrenamiento.** Con mi grabación casera de guitarra ni
+  siquiera es consistente: cada vez que lo entreno da una probabilidad diferente. Cambiar el tono
+  o recomprimir el audio también puede borrar parte de la huella.
 - **Solo sabe decir sí o no.** Para el clip híbrido no hay respuesta correcta en un sistema
   binario. La pregunta interesante es **cuánta IA** tiene esa canción, y de eso trata
   [mi investigación](https://arxiv.org/abs/2608.07285).

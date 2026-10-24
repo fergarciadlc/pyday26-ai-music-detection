@@ -75,18 +75,18 @@ from scipy.ndimage import minimum_filter1d, uniform_filter1d
 SR = 24_000
 y, _ = librosa.load("guitar.mp3", sr=SR)
 
-# 1. Espectro promedio con resolución de 1 Hz (n_fft = SR)
+# 1. Mean spectrum at 1 Hz resolution (n_fft = SR)
 S = np.abs(librosa.stft(y, n_fft=SR, hop_length=SR // 4))
-espectro = 20 * np.log10(S.mean(axis=1) + 1e-10)
+spectrum = 20 * np.log10(S.mean(axis=1) + 1e-10)
 
-# 2. Quitamos la forma general del espectro: quedan solo los picos
-picos = np.clip(espectro - uniform_filter1d(minimum_filter1d(espectro, 201), 201), 0, None)
+# 2. Remove the overall shape of the spectrum: only the peaks remain
+peaks = np.clip(spectrum - uniform_filter1d(minimum_filter1d(spectrum, 201), 201), 0, None)
 
-# 3. "Doblamos" el espectro cada 600 Hz y promediamos
-f = np.arange(len(picos))
-banda = (f >= 2_000) & (f <= 11_500)
-posicion = ((f + 300) % 600)[banda]
-doblado = np.bincount(posicion, picos[banda], 600) / np.bincount(posicion, minlength=600)
+# 3. "Fold" the spectrum every 600 Hz and average
+f = np.arange(len(peaks))
+band = (f >= 2_000) & (f <= 11_500)
+offset = ((f + 300) % 600)[band]
+folded = np.bincount(offset, peaks[band], 600) / np.bincount(offset, minlength=600)
 ```
 
 Para hacerlo con tu propio audio:

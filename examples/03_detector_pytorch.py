@@ -1,15 +1,14 @@
-"""Un detector binario en PyTorch: ¿audio real o audio que pasó por EnCodec?
+"""A binary detector in PyTorch: real audio, or audio that went through EnCodec?
 
-El truco de los datos sintéticos: tomamos música real, la pasamos por un codec
-neuronal (encode -> decode) y entrenamos una CNN para distinguir las dos
-versiones. La música es la misma; lo único que cambia son los artefactos del
-decoder.
+The synthetic-data trick: take real music, pass it through a neural codec
+(encode -> decode) and train a CNN to tell the two versions apart. The music is
+the same; the only difference is the decoder's artifacts.
 
-Uso:
-    uv run --python 3.12 --group audio examples/03_detector_pytorch.py
+Run with:
+    uv run --group audio examples/03_detector_pytorch.py
 """
 
-# %% Imports y configuración
+# %% Imports and settings
 import json
 import random
 from pathlib import Path
@@ -21,22 +20,22 @@ import torch
 from torch import nn
 from transformers import EncodecModel
 
-SR = 24_000  # EnCodec trabaja a 24 kHz
-BANDWIDTH = 3.0  # kbps, el mismo bitrate que en la página de fakeprints
-WIN = int(2.5 * SR)  # ventanas de 2.5 s ...
-HOP = WIN // 2  # ... que se traslapan a la mitad
-N_FFT, STFT_HOP = 2048, 512  # los mismos parámetros que el snippet de librosa
+SR = 24_000  # EnCodec works at 24 kHz
+BANDWIDTH = 3.0  # kbps, the same bitrate as in the fakeprints section
+WIN = int(2.5 * SR)  # 2.5 s windows...
+HOP = WIN // 2  # ...with 50% overlap
+N_FFT, STFT_HOP = 2048, 512  # the same parameters as the librosa snippet
 EPOCHS, BATCH = 8, 16
 OUT = Path("docs/assets/examples/03")
 
-# Semilla fija: así cada corrida da (casi) los mismos números.
+# Fixed seed so every run gives (almost) the same numbers.
 random.seed(0)
 np.random.seed(0)
 torch.manual_seed(0)
-device = "mps" if torch.backends.mps.is_available() else "cpu"  # GPU de Mac si hay
-print("Dispositivo:", device)
+device = "mps" if torch.backends.mps.is_available() else "cpu"  # Apple GPU if available
+print("Device:", device)
 
-# %% El codec: pasar audio por EnCodec (encode -> decode)
+# %% The codec: pass audio through EnCodec (encode -> decode)
 # --8<-- [start:codec]
 codec = EncodecModel.from_pretrained("facebook/encodec_24khz").eval()
 
@@ -49,74 +48,81 @@ def through_codec(y: np.ndarray) -> np.ndarray:
 
 
 def to_24k_mono(y: np.ndarray, sr: int) -> np.ndarray:
-    # ¡Ojo! Primero bajamos el audio real a 24 kHz mono y DESPUÉS hacemos la
-    # versión codec. Si no, el modelo aprendería "¿hay agudos arriba de 12 kHz?"
-    # en lugar de los artefactos del decoder.
+    # Careful: resample the real audio to 24 kHz mono FIRST, and only then make the
+    # codec version. Otherwise the model would learn "is there content above 12 kHz?"
+    # instead of the decoder's artifacts.
     y = librosa.resample(librosa.to_mono(y), orig_sr=sr, target_sr=SR)
     return (0.9 * y / (np.abs(y).max() + 1e-9)).astype(np.float32)
+
+
 # --8<-- [end:codec]
 
 
-# %% Features: espectrograma log-magnitud por ventana
+# %% Features: log-magnitude spectrogram per window
 # --8<-- [start:features]
 def windows(y: np.ndarray) -> np.ndarray:
-    """Corta el audio en ventanas y calcula log|STFT| de cada una."""
+    """Cut the audio into windows and compute log|STFT| of each one."""
     starts = range(0, len(y) - WIN + 1, HOP)
     specs = [np.abs(librosa.stft(y[s : s + WIN], n_fft=N_FFT, hop_length=STFT_HOP)) for s in starts]
-    return np.log(np.stack(specs) + 1e-5).astype(np.float32)  # (ventanas, frecuencias, tiempo)
+    return np.log(np.stack(specs) + 1e-5).astype(np.float32)  # (windows, freqs, time)
+
+
 # --8<-- [end:features]
 
 
-# %% Datos: MUSDB18 (versión gratuita de 7 s por canción), solo las mezclas
-# La partición train/test es POR CANCIÓN: ninguna ventana de una canción de
-# test aparece en train (si no, el modelo podría "recordar" la canción).
-# --8<-- [start:datos]
+# %% Data: MUSDB18 (free 7 s preview of each song), mixtures only
+# The train/test split is BY SONG: no window of a test song is ever seen in
+# training (otherwise the model could simply "remember" the song).
+# --8<-- [start:data]
 def build_split(subset: str):
     X, y, track_ids = [], [], []
     for i, track in enumerate(musdb.DB(download=True, subsets=subset)):
-        real = to_24k_mono(track.audio.T, track.rate)  # .audio es la mezcla
+        real = to_24k_mono(track.audio.T, track.rate)  # .audio is the mixture
         for label, audio in [(0, real), (1, through_codec(real))]:  # 0 = real, 1 = codec
             w = windows(audio)
             X.append(w)
             y += [label] * len(w)
             track_ids += [i] * len(w)
-    return torch.from_numpy(np.concatenate(X))[:, None], torch.tensor(y, dtype=torch.float32), np.array(track_ids)
+    X = torch.from_numpy(np.concatenate(X))[:, None]
+    return X, torch.tensor(y, dtype=torch.float32), np.array(track_ids)
 
 
 X_train, y_train, train_tracks = build_split("train")
 X_test, y_test, test_tracks = build_split("test")
-print(f"Ventanas: train {len(X_train)}, test {len(X_test)}; forma {tuple(X_train.shape[1:])}")
-# --8<-- [end:datos]
+print(f"Windows: train {len(X_train)}, test {len(X_test)}; shape {tuple(X_train.shape[1:])}")
+# --8<-- [end:data]
 
 
-# %% El modelo: bloques conv -> pooling global -> capa densa -> 1 logit
-# --8<-- [start:modelo]
+# %% The model: conv blocks -> global pooling -> dense layer -> 1 logit
+# --8<-- [start:model]
 def conv_block(c_in: int, c_out: int) -> nn.Sequential:
-    # conv busca patrones locales, batchnorm estabiliza, ReLU agrega no-linealidad,
-    # maxpool reduce el tamaño a la mitad.
+    # conv finds local patterns, batch norm keeps values stable, ReLU adds
+    # non-linearity, max-pool halves the size.
     return nn.Sequential(
         nn.Conv2d(c_in, c_out, 3, padding=1), nn.BatchNorm2d(c_out), nn.ReLU(), nn.MaxPool2d(2)
     )
 
 
+# fmt: off
 model = nn.Sequential(
-    nn.BatchNorm2d(1),  # normaliza la escala del espectrograma de entrada
+    nn.BatchNorm2d(1),  # normalise the scale of the input spectrogram
     conv_block(1, 16), conv_block(16, 32), conv_block(32, 64),
     conv_block(64, 128), conv_block(128, 256), conv_block(256, 512),
-    nn.AdaptiveAvgPool2d(1), nn.Flatten(),  # promedio global: un número por canal
-    nn.Linear(512, 128), nn.ReLU(),  # capa densa de 128 unidades
-    nn.Linear(128, 1),  # 1 logit: > 0 significa "codec"
+    nn.AdaptiveAvgPool2d(1), nn.Flatten(),  # global average pooling: one number per channel
+    nn.Linear(512, 128), nn.ReLU(),  # dense layer, 128 units
+    nn.Linear(128, 1),  # 1 logit: > 0 means "codec"
 ).to(device)
-loss_fn = nn.BCEWithLogitsLoss()  # sigmoide + entropía cruzada binaria en un solo paso
+# fmt: on
+loss_fn = nn.BCEWithLogitsLoss()  # sigmoid + binary cross-entropy in one step
 opt = torch.optim.Adam(model.parameters(), lr=1e-3)
-# --8<-- [end:modelo]
+# --8<-- [end:model]
 
 
-# %% Entrenamiento
-# --8<-- [start:entrenamiento]
+# %% Training
+# --8<-- [start:training]
 @torch.no_grad()
 def predict(X: torch.Tensor) -> np.ndarray:
-    """Probabilidad de 'codec' para cada ventana."""
+    """Probability of 'codec' for each window."""
     model.eval()
     logits = torch.cat([model(X[i : i + 64].to(device)).cpu() for i in range(0, len(X), 64)])
     return torch.sigmoid(logits).squeeze(1).numpy()
@@ -125,7 +131,7 @@ def predict(X: torch.Tensor) -> np.ndarray:
 history = []
 for epoch in range(1, EPOCHS + 1):
     model.train()
-    perm = torch.randperm(len(X_train))  # revolvemos los ejemplos en cada época
+    perm = torch.randperm(len(X_train))  # shuffle the examples every epoch
     total_loss, correct = 0.0, 0
     for i in range(0, len(perm), BATCH):
         idx = perm[i : i + BATCH]
@@ -138,29 +144,33 @@ for epoch in range(1, EPOCHS + 1):
         total_loss += loss.item() * len(idx)
         correct += ((logits > 0) == yb.bool()).sum().item()
     test_acc = float(((predict(X_test) > 0.5) == y_test.numpy()).mean())
-    history.append({
-        "epoch": epoch,
-        "train_loss": round(total_loss / len(X_train), 4),
-        "train_acc": round(correct / len(X_train), 4),
-        "test_acc": round(test_acc, 4),
-    })
+    history.append(
+        {
+            "epoch": epoch,
+            "train_loss": round(total_loss / len(X_train), 4),
+            "train_acc": round(correct / len(X_train), 4),
+            "test_acc": round(test_acc, 4),
+        }
+    )
     print(history[-1])
-# --8<-- [end:entrenamiento]
+# --8<-- [end:training]
 
-# %% Evaluación: por ventana y por canción
+# %% Evaluation: per window and per song
 p_test = predict(X_test)
 window_acc = float(((p_test > 0.5) == y_test.numpy()).mean())
-# Por canción: promediamos las ventanas de cada (canción, versión) y decidimos una vez.
+# Per song: average the windows of each (song, version) and decide once.
 labels = y_test.numpy()
-groups = {(t, l) for t, l in zip(test_tracks, labels)}
-track_acc = float(np.mean([
-    (p_test[(test_tracks == t) & (labels == l)].mean() > 0.5) == l for t, l in groups
-]))
-print(f"Exactitud en test: por ventana {window_acc:.3f}, por canción {track_acc:.3f}")
+groups = set(zip(test_tracks, labels, strict=True))
+track_acc = float(
+    np.mean(
+        [(p_test[(test_tracks == t) & (labels == lab)].mean() > 0.5) == lab for t, lab in groups]
+    )
+)
+print(f"Test accuracy: per window {window_acc:.3f}, per song {track_acc:.3f}")
 
 
-# %% Por diversión (y honestidad): audio que el modelo nunca vio
-# --8<-- [start:nuevos]
+# %% For fun (and honesty): audio the model has never seen
+# --8<-- [start:unseen]
 def score_file(path: str, codec_version: bool = False) -> float:
     y, sr = librosa.load(path, sr=None, mono=False)
     y = to_24k_mono(y, sr)
@@ -172,19 +182,19 @@ def score_file(path: str, codec_version: bool = False) -> float:
 files = {
     "guitar.mp3 (real)": score_file("audio/guitar.mp3"),
     "guitar.mp3 + EnCodec": score_file("audio/guitar.mp3", codec_version=True),
-    "clip-3.mp3 (IA, Suno)": score_file("docs/assets/quiz/clip-3.mp3"),
-    "clip-4.mp3 (híbrido: guitarra humana + Suno)": score_file("docs/assets/quiz/clip-4.mp3"),
-    "clip-5.mp3 (IA, Suno)": score_file("docs/assets/quiz/clip-5.mp3"),
+    "clip-3.mp3 (AI, Suno)": score_file("docs/assets/quiz/clip-3.mp3"),
+    "clip-4.mp3 (hybrid: human guitar + Suno)": score_file("docs/assets/quiz/clip-4.mp3"),
+    "clip-5.mp3 (AI, Suno)": score_file("docs/assets/quiz/clip-5.mp3"),
 }
 for name, p in files.items():
     print(f"P(codec) = {p:.3f}  {name}")
-# El modelo solo vio EnCodec: si falla con Suno, eso es justo el problema de la
-# generalización. Un detector aprende la huella de los decoders que conoce.
-# --8<-- [end:nuevos]
+# The model has only seen EnCodec: if it fails on Suno, that is exactly the
+# generalisation problem. A detector learns the fingerprint of the decoders it knows.
+# --8<-- [end:unseen]
 
-# %% Guardar resultados
+# %% Save the results
 OUT.mkdir(parents=True, exist_ok=True)
-(OUT / "results.json").write_text(json.dumps({
+results = {
     "device": device,
     "dataset": {
         "train_tracks": len(np.unique(train_tracks)),
@@ -196,4 +206,5 @@ OUT.mkdir(parents=True, exist_ok=True)
     "test_window_acc": round(window_acc, 4),
     "test_track_acc": round(track_acc, 4),
     "p_codec": files,
-}, ensure_ascii=False, indent=1))
+}
+(OUT / "results.json").write_text(json.dumps(results, indent=1))

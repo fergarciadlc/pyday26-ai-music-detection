@@ -190,6 +190,22 @@ header.hero { position: relative; padding: 76px 0 64px; }
 }
 .poster .wordmark { width: 82%; }
 .poster .logo { width: 30%; align-self: flex-end; opacity: 0.95; }
+.poster .avatar {
+  position: absolute;
+  left: 30px;
+  bottom: 34px;
+  width: 38%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.55);
+}
+.author a { text-decoration-color: var(--magenta); }
+.social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.btn.icon { padding: 7px 14px; font-size: 15px; border-color: var(--line); }
+.btn.icon:hover { border-color: var(--ink); }
+.btn svg.fill { fill: currentColor; stroke: none; }
 
 /* Sections */
 body > section { padding: 84px 0; border-top: 1px solid var(--line); }
@@ -274,6 +290,7 @@ footer .pyday img { width: 22px; }
   .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .poster { aspect-ratio: 16 / 9; max-width: 520px; }
   .poster .logo { width: 18%; }
+  .poster .avatar { width: 30%; left: 24px; bottom: 24px; border-width: 4px; }
   .grid.c3, .grid.c4, .pd-quiz { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body > section { padding: 64px 0; }
 }

@@ -5,7 +5,8 @@ diagram shows a shared backbone with a binary and a regression head. Here we kee
 only the binary detector, translate the labels to Spanish and use PyDay colours.
 
 Usage:
-    uv run scripts/build_cnn_diagram.py ../ismir26-how-much-ai/assets/diagrams/architecture.svg web/assets/cnn.svg
+    uv run scripts/build_cnn_diagram.py \
+        ../ismir26-how-much-ai/assets/diagrams/architecture.svg web/static/cnn.svg
 """
 
 import re
@@ -42,10 +43,15 @@ svg = re.sub(r'<path class="br".*?\n', "", svg)
 
 # Centre the binary output on the dense layer and relabel it.
 svg = svg.replace('x2="885" y2="148" stroke="#e7a1ad"', 'x2="885" y2="193" stroke="#f39ac4"')
-svg = svg.replace('<circle class="bin" cx="900" cy="148" r="16"/>', '<circle class="bin" cx="900" cy="193" r="16"/>')
+svg = svg.replace(
+    '<circle class="bin" cx="900" cy="148" r="16"/>',
+    '<circle class="bin" cx="900" cy="193" r="16"/>',
+)
 svg = re.sub(
     r'<text class="head bin" x="930" y="118">Binary detector</text>\n'
-    r'<text class="hl" x="930" y="140">sigmoid · BCE</text><text class="hl" x="930" y="160">labels \{0, 1\}</text><text class="hs" x="930" y="180">on FMA \+ EnCodec</text>',
+    r'<text class="hl" x="930" y="140">sigmoid · BCE</text>'
+    r'<text class="hl" x="930" y="160">labels \{0, 1\}</text>'
+    r'<text class="hs" x="930" y="180">on FMA \+ EnCodec</text>',
     '<text class="head bin" x="930" y="168">Probabilidad de IA</text>\n'
     '<text class="hl" x="930" y="192">sigmoide · BCE</text>'
     '<text class="hl" x="930" y="213">0 = humano · 1 = IA</text>'
@@ -55,15 +61,22 @@ svg = re.sub(
 assert "Probabilidad de IA" in svg and "Regression" not in svg and "#9fbde0" not in svg
 
 # PyDay magenta instead of the paper's red; trim the empty bottom.
-svg = svg.replace("--binary,#c43c52", "--binary,#d6246e").replace('stroke="#c43c52"', 'stroke="#d6246e"')
+svg = svg.replace("--binary,#c43c52", "--binary,#d6246e").replace(
+    'stroke="#c43c52"', 'stroke="#d6246e"'
+)
 svg = svg.replace('viewBox="0 0 1180 400"', 'viewBox="0 0 1180 345"')
-svg = re.sub(r"<title id=\"archT\">.*?</title>", '<title id="archT">Arquitectura del detector binario</title>', svg)
+svg = re.sub(
+    r"<title id=\"archT\">.*?</title>",
+    '<title id="archT">Arquitectura del detector binario</title>',
+    svg,
+)
 svg = re.sub(
     r'<desc id="archD">.*?</desc>',
-    '<desc id="archD">Un espectrograma (STFT con ventana de 2048 y hop de 512) pasa por seis bloques '
-    "convolucionales cuyos filtros se duplican de 16 a 512, luego por un promedio global y una capa densa "
-    "de 128 unidades. Una sigmoide entrenada con entropía cruzada binaria da la probabilidad de que el "
-    "audio sea IA: 0 humano, 1 IA.</desc>",
+    # The page is in Spanish, so the diagram's accessible description is too.
+    '<desc id="archD">Un espectrograma (STFT con ventana de 2048 y hop de 512) pasa por '
+    "seis bloques convolucionales cuyos filtros se duplican de 16 a 512, luego por un "
+    "promedio global y una capa densa de 128 unidades. Una sigmoide entrenada con entropía "
+    "cruzada binaria da la probabilidad de que el audio sea IA: 0 humano, 1 IA.</desc>",
     svg,
     flags=re.S,
 )

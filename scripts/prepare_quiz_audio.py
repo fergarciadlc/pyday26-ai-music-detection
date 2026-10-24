@@ -24,9 +24,25 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for name, src in CLIPS.items():
         subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", src,
-             "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1",
-             "-id3v2_version", "0", "-write_id3v1", "0", str(OUT / name)],
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                src,
+                "-map",
+                "0:a",
+                "-c:a",
+                "copy",
+                "-map_metadata",
+                "-1",
+                "-id3v2_version",
+                "0",
+                "-write_id3v1",
+                "0",
+                str(OUT / name),
+            ],
             check=True,
         )
         print(f"{src} -> {OUT / name}")
