@@ -184,8 +184,8 @@
     c1.append(
       el("h3", {}, "La huella: el espectro doblado cada 600 Hz"),
       el("p", { class: "fp-sub" },
-        "Cortamos el espectro (2–11.5 kHz) en tramos de 600 Hz y los promediamos. " +
-        "Si hay picos en todos los múltiplos de 600 Hz, se suman en el centro."),
+        "Cortamos el espectro (de 2 a 11.5 kHz) en pedazos de 600 Hz y los ponemos uno encima del otro. " +
+        "Las notas se promedian; los picos del decoder caen siempre en el centro y se suman."),
     );
     ui.tiles = el("div", { class: "fp-tiles" });
     ui.legend1 = el("div", { class: "fp-legend" });
@@ -205,8 +205,8 @@
     c2.append(
       el("h3", {}, "Espectro promedio de alta resolución"),
       el("p", { class: "fp-sub" },
-        "Espectro con resolución de 1 Hz menos su envolvente: quedan los picos. " +
-        "En la guitarra hay parciales en ambos; en EnCodec se suman picos que caen en la rejilla de 600 Hz."),
+        "Todo el audio promediado con resolución de 1 Hz, dejando solo los picos. " +
+        "Las notas de la guitarra aparecen en los dos; en EnCodec además hay picos sobre la rejilla amarilla."),
       c2ctrl,
     );
     ui.spec = chartCanvas(300, "Espectro promedio de alta resolución, original arriba y EnCodec abajo");

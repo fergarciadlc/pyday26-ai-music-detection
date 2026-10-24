@@ -1,9 +1,18 @@
-/* PyDay México 2026 palette: magenta → indigo → yellow, as in the slides. */
+/* PyDay México 2026 identity, sampled from the speakers' template:
+   a four-corner gradient (magenta, blue, teal, yellow) behind white artwork. */
 :root {
-  --pd-magenta: #d6246e;
-  --pd-indigo: #24318f;
-  --pd-yellow: #f5b700;
-  --pd-gradient: linear-gradient(135deg, #d81b7a 0%, #6a2c9c 30%, #1f4f9e 58%, #3f8f8a 78%, #f5b700 100%);
+  --pd-magenta: #e9077b;
+  --pd-blue: #005a9e;
+  --pd-teal: #007098;
+  --pd-yellow: #fec200;
+  --pd-indigo: var(--pd-blue);
+  --pd-gradient:
+    radial-gradient(at 0% 0%, #e9077b 0, transparent 58%),
+    radial-gradient(at 100% 0%, #005a9e 0, transparent 58%),
+    radial-gradient(at 0% 100%, #007098 0, transparent 58%),
+    radial-gradient(at 100% 100%, #fec200 0, transparent 58%),
+    #4d6774;
+  --pd-glass: rgba(18, 22, 58, 0.55);
 
   /* Chart series (validated: light surface) */
   --pd-orig: #2f6fde;
@@ -49,35 +58,104 @@
   --md-typeset-a-color: #8ea6ff;
 }
 
+/* Header: the top edge of the template gradient (magenta → blue). */
 .md-header,
 .md-tabs {
-  background: linear-gradient(90deg, #b8166c 0%, #4a2a95 45%, #1f3f97 100%);
+  background: linear-gradient(90deg, #e9077b 0%, #474c87 50%, #005a9e 100%);
 }
+.md-header__button.md-logo img { height: 1.6rem; }
 
-/* ---------- Home hero ---------- */
-.pd-hero {
+/* ---------- Titles like the slides: bold, kicker above, yellow bar below ---------- */
+.md-typeset h1 {
+  font-weight: 700;
+  color: var(--md-default-fg-color);
+  letter-spacing: -0.01em;
+  margin-bottom: 1.4rem;
+}
+.md-typeset h1::after {
+  content: "";
+  display: block;
+  width: 3.2rem;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pd-yellow);
+  margin-top: 0.7rem;
+}
+.md-typeset h2 { font-weight: 600; }
+.md-typeset .pd-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--md-default-fg-color--light);
+  margin: 0 0 0.3rem;
+}
+.md-typeset .pd-kicker + h1 { margin-top: 0; }
+
+/* ---------- Gradient band with glass cards (the slides' look) ---------- */
+.pd-band {
+  position: relative;
   background: var(--pd-gradient);
   color: #fff;
   border-radius: 18px;
-  padding: 2.6rem 2.2rem 2rem;
+  padding: 1.4rem;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+.pd-band::after {
+  /* the serpent watermark, bottom-right like in every slide */
+  content: "";
+  position: absolute;
+  right: 1rem;
+  bottom: 0.8rem;
+  width: 2.6rem;
+  height: 3.8rem;
+  background: url("../brand/pyday-logo.png") center / contain no-repeat;
+  opacity: 0.75;
+  pointer-events: none;
+}
+.pd-glass-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.8rem;
+  padding-right: 3rem;
+}
+.pd-glass {
+  background: var(--pd-glass);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  line-height: 1.4;
+  font-size: 0.78rem;
+}
+.pd-glass b.pd-big { display: block; font-size: 2.3rem; font-weight: 700; line-height: 1.1; margin-bottom: 0.3rem; }
+.pd-glass .pd-n { display: block; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
+.md-typeset .pd-band .pd-source { color: rgba(255, 255, 255, 0.75); margin: 0.8rem 0 0; }
+
+/* ---------- Home hero ---------- */
+.pd-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: center;
+  background: var(--pd-gradient);
+  color: #fff;
+  border-radius: 18px;
+  padding: 2.4rem 2.4rem 2rem;
   margin: 0.5rem 0 2rem;
 }
+.pd-hero .pd-wordmark { display: block; width: min(300px, 70%); height: auto; margin: 0 0 1.4rem; }
+.pd-hero .pd-logo { width: 150px; height: auto; opacity: 0.95; }
 .pd-hero h1 {
   color: #fff;
   font-weight: 700;
   font-size: 2.8rem;
-  margin: 0.2rem 0 0.4rem;
+  margin: 0 0 0.4rem;
   letter-spacing: -0.01em;
 }
-.pd-hero .pd-kicker {
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.7rem;
-  opacity: 0.85;
-  margin: 0;
-}
+.pd-hero h1::after { margin-top: 0.9rem; }
 .pd-hero .pd-lead { font-size: 1.15rem; margin: 0 0 1.2rem; }
-.pd-hero .pd-author { font-size: 0.8rem; opacity: 0.9; margin-bottom: 1.4rem; }
+.pd-hero .pd-author { font-size: 0.8rem; opacity: 0.92; margin-bottom: 1.4rem; }
 .pd-hero .md-button {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.8);
@@ -92,9 +170,41 @@
 .pd-hero .md-button--primary:hover { background: var(--pd-yellow); color: #1b1c2a; border-color: var(--pd-yellow); }
 
 @media screen and (max-width: 44.9375em) {
-  .pd-hero { padding: 1.8rem 1.2rem 1.4rem; }
+  .pd-hero { grid-template-columns: minmax(0, 1fr); padding: 1.8rem 1.2rem 1.4rem; }
+  .pd-hero .pd-logo { display: none; }
   .pd-hero h1 { font-size: 2.1rem; }
+  .pd-glass-grid { padding-right: 0; padding-bottom: 3.6rem; }
 }
+
+/* ---------- Experiment players (codec page) ---------- */
+.pd-exps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 1.5rem;
+}
+.pd-exp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.9rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 12px;
+  background: var(--pd-card);
+}
+.md-typeset .pd-exp p { margin: 0; font-size: 0.74rem; line-height: 1.45; }
+.md-typeset .pd-exp .pd-exp-title { font-weight: 600; font-size: 0.8rem; }
+.pd-exp audio { width: 100%; height: 2.2rem; }
+.pd-chip {
+  align-self: flex-start;
+  font-size: 0.64rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(254, 194, 0, 0.22);
+  color: var(--md-default-fg-color);
+}
+.md-typeset .pd-figure { border-radius: 10px; border: 1px solid var(--pd-border); }
 
 /* ---------- Quiz ---------- */
 .pd-quiz {
@@ -170,19 +280,6 @@
 .pd-clip.is-hybrid .pd-verdict::before { content: "◆ "; color: var(--pd-yellow); }
 .md-typeset .pd-quiz-actions { text-align: center; }
 
-.pd-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-.pd-stat {
-  padding: 1.2rem 1.4rem;
-  border-radius: 14px;
-  background: var(--pd-gradient);
-  color: #fff;
-  line-height: 1.4;
-}
-.pd-stat span { display: block; font-size: 2.6rem; font-weight: 700; line-height: 1.1; }
 .md-typeset .pd-source { font-size: 0.7rem; color: var(--md-default-fg-color--light); }
 
 /* ---------- Fakeprints panel ---------- */

@@ -14,6 +14,7 @@ site = [
 # Scripts that precompute the site's audio and data
 audio = [
     "librosa>=0.10",
+    "musdb>=0.4",
     "matplotlib>=3.8",
     "numpy>=1.26",
     "scipy>=1.11",

@@ -2,10 +2,13 @@
 title: ¿Cuál es IA?
 ---
 
+<p class="pd-kicker">Antes de empezar</p>
+
 # ¿Cuál es IA?
 
-Así empezó la charla: seis canciones, algunas hechas por personas y otras generadas con IA.
-Escúchalas, decide y luego revela la respuesta.
+Así empecé la charla, con un pequeño experimento. Escucha estos fragmentos y trata de
+adivinar cuáles hizo una persona (o un grupo de personas) y cuáles una inteligencia
+artificial. Toma nota antes de revelar las respuestas.
 
 <div class="pd-quiz" markdown>
 
@@ -18,7 +21,7 @@ Escúchalas, decide y luego revela la respuesta.
   <button class="md-button pd-reveal" type="button">Revelar</button>
   <div class="pd-answer" hidden>
     <p class="pd-verdict">Humana</p>
-    <p><em>Blanco y Negro</em> · LAGOS y Elena Rose.</p>
+    <p>Una canción real: <em>Blanco y Negro</em>, de LAGOS y Elena Rose.</p>
   </div>
 </article>
 
@@ -31,7 +34,7 @@ Escúchalas, decide y luego revela la respuesta.
   <button class="md-button pd-reveal" type="button">Revelar</button>
   <div class="pd-answer" hidden>
     <p class="pd-verdict">Humana</p>
-    <p><em>Creep</em> (cover de Radiohead) · Postmodern Jukebox con Haley Reinhart.</p>
+    <p>Un cover de <em>Creep</em> (Radiohead) del canal de YouTube Postmodern Jukebox, con Haley Reinhart.</p>
   </div>
 </article>
 
@@ -43,7 +46,7 @@ Escúchalas, decide y luego revela la respuesta.
   <button class="md-button pd-reveal" type="button">Revelar</button>
   <div class="pd-answer" hidden>
     <p class="pd-verdict">IA</p>
-    <p><em>Sink Full of Sun</em> · jazz swing generado con Suno.</p>
+    <p><em>Sink Full of Sun</em>, generada con Suno, una plataforma de inteligencia artificial para hacer música.</p>
   </div>
 </article>
 
@@ -55,7 +58,7 @@ Escúchalas, decide y luego revela la respuesta.
   <button class="md-button pd-reveal" type="button">Revelar</button>
   <div class="pd-answer" hidden>
     <p class="pd-verdict">Híbrida</p>
-    <p>Lo-fi creado con Suno a partir de una grabación humana (función <em>cover</em>).</p>
+    <p>Este es un poco de trampa: yo estoy tocando la guitarra y le pedí a Suno que hiciera la base. ¿Es real o es IA? Tiene un poco de las dos.</p>
   </div>
 </article>
 
@@ -67,7 +70,7 @@ Escúchalas, decide y luego revela la respuesta.
   <button class="md-button pd-reveal" type="button">Revelar</button>
   <div class="pd-answer" hidden>
     <p class="pd-verdict">IA</p>
-    <p><em>Sink Full of Dishes</em> · R&amp;B generado con Suno.</p>
+    <p><em>Sink Full of Dishes</em>, también generada con Suno.</p>
   </div>
 </article>
 
@@ -80,7 +83,7 @@ Escúchalas, decide y luego revela la respuesta.
   <button class="md-button pd-reveal" type="button">Revelar</button>
   <div class="pd-answer" hidden>
     <p class="pd-verdict">IA</p>
-    <p><em>Walking Away</em> · Sadie Winters, un proyecto musical generado con IA.</p>
+    <p><em>Walking Away</em> de Sadie Winters, también generada con Suno. Se popularizó gracias al YouTuber Rick Beato, que habló de ella en su canal a propósito de la música generada con IA.</p>
   </div>
 </article>
 
@@ -88,16 +91,23 @@ Escúchalas, decide y luego revela la respuesta.
 
 <p class="pd-quiz-actions"><button class="md-button md-button--primary pd-reveal-all" type="button">Revelar todas</button></p>
 
-## No eres el único
+## ¿Cómo te fue?
 
-<div class="pd-stats" markdown>
+Seguramente fue más difícil de lo que pensabas. No te preocupes, es bastante normal:
 
-<div class="pd-stat"><span>97%</span>no supo distinguir música 100% IA de música hecha por personas</div>
-<div class="pd-stat"><span>80%</span>quiere que la música IA esté claramente etiquetada</div>
+<div class="pd-band" markdown>
+
+<div class="pd-glass-grid">
+  <div class="pd-glass"><b class="pd-big">97%</b>de las personas no supo distinguir una canción generada por IA de una hecha por personas.</div>
+  <div class="pd-glass"><b class="pd-big">80%</b>dice que le gustaría saber si una canción es de IA, por transparencia.</div>
+</div>
+
+<p class="pd-source">Fuente: encuesta de Deezer e Ipsos a 9,000 personas en 8 países (noviembre 2025).</p>
 
 </div>
 
-<p class="pd-source">Fuente: encuesta Deezer/Ipsos (noviembre 2025).</p>
+O sea: casi nadie es capaz de distinguirla con solo escucharla, pero a casi todos parece
+importarles saber qué están escuchando.
 
-Y no todas las respuestas son "sí" o "no": el clip 4 mezcla una grabación humana con
-generación. Ese caso, el contenido **híbrido**, es el tema de la última parte de la charla.
+Y fíjate en el clip 4: no es ni "sí" ni "no". Ese caso, el contenido **híbrido**, es justo
+el tema de mi investigación y de la última parte de la charla.

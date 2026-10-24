@@ -1,15 +1,19 @@
 site_name: ¿Suena a IA?
 site_description: Detección de música generada por inteligencia artificial · PyDay México 2026
-site_author: Fernando García de la Cruz
+site_author: Fernando Garcia de la Cruz
 site_url: https://fergarciadlc.github.io/pyday26-ai-music-detection/
 repo_url: https://github.com/fergarciadlc/pyday26-ai-music-detection
 repo_name: fergarciadlc/pyday26-ai-music-detection
-copyright: Fernando García de la Cruz · PyDay México 2026
+copyright: Fernando Garcia de la Cruz · PyDay México 2026
 
 nav:
   - Inicio: index.md
   - ¿Cuál es IA?: quiz.md
-  - Fakeprints: fakeprints.md
+  - Cómo se genera: genera.md
+  - Cómo se detecta:
+      - Espectrogramas: detecta/espectrogramas.md
+      - Un detector en PyTorch: detecta/detector.md
+      - Fakeprints: detecta/fakeprints.md
   - Recursos: recursos.md
 
 theme:
@@ -18,8 +22,9 @@ theme:
   font:
     text: Outfit
     code: JetBrains Mono
+  logo: assets/brand/pyday-snake.png
+  favicon: assets/brand/pyday-snake.png
   icon:
-    logo: material/waveform
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -58,6 +63,10 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+      dedent_subsections: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg

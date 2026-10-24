@@ -9,7 +9,7 @@ Todo lo que se menciona en la charla, por sección.
 ## Material de la charla
 
 - [Slides en PDF](assets/slides/pyday26mx-ai-music-detection.pdf)
-- [Código de esta web](https://github.com/fergarciadlc/pyday26-ai-music-detection), incluidos los scripts que generan los audios y datos de la página de [fakeprints](fakeprints.md)
+- [Código de esta web](https://github.com/fergarciadlc/pyday26-ai-music-detection): los ejemplos de [espectrogramas](detecta/espectrogramas.md), del [codec y sus latentes](genera.md) y del [detector en PyTorch](detecta/detector.md), y los scripts que generan los audios de [fakeprints](detecta/fakeprints.md)
 - [**Audio Atlas**](atlas.html){ target="_blank" }: un mapa interactivo de los modelos generativos de audio (voz, música, efectos, codecs) y su linaje (en inglés)
 
 ## 01 · Contexto actual
