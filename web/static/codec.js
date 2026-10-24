@@ -45,6 +45,26 @@
     el("path", { d, class: "wv" }, g);
     return g;
   }
+  // A waveform that can show playback progress: a lit copy clipped to the played part.
+  let clipId = 0;
+  function pwave(parent, x0, w, values) {
+    parent.replaceChildren();
+    const g = wave(parent, x0, w, values, "pw");
+    const id = `dg-clip-${++clipId}`;
+    const r = el("rect", { x: x0, y: 0, width: 0, height: 300 }, el("clipPath", { id }, defs));
+    const lit = g.firstChild.cloneNode();
+    lit.setAttribute("class", "wv wv-lit");
+    lit.setAttribute("clip-path", `url(#${id})`);
+    g.append(lit);
+    const head = el("line", { x1: x0, x2: x0, y1: CY - 72, y2: CY + 72, class: "whead" }, g);
+    return {
+      set(p) {
+        r.setAttribute("width", (w * p).toFixed(1));
+        head.setAttribute("x1", x0 + w * p);
+        head.setAttribute("x2", x0 + w * p);
+      },
+    };
+  }
   function stack(parent, x, n, w, h, gap, cls) {
     const g = el("g", { class: cls }, parent);
     const total = n * h + (n - 1) * gap;
@@ -60,7 +80,7 @@
       <button role="tab" data-mode="gen" aria-selected="false">Generación</button>
       <button role="tab" data-mode="decoder" aria-selected="false">Dentro del decoder</button>
     </div>`;
-  const svg = el("svg", { viewBox: "0 0 1000 300", class: "dg", "data-mode": "codec", role: "img",
+  const svg = el("svg", { viewBox: "4 34 890 234", class: "dg", "data-mode": "codec", role: "img",
     "aria-label": "Diagrama de un codec neuronal: encoder, latentes, códigos, decoder; y la versión generativa." }, root);
   const caption = document.createElement("p");
   caption.className = "dg-caption";
@@ -76,7 +96,7 @@
   // Codec-only: input, encoder, first latents, encoder projection.
   const codecOnly = el("g", { class: "only-codec" }, svg);
   const inG = part(el("g", {}, codecOnly), "in");
-  const inWave = wave(inG, 20, 130, new Array(96).fill(0.3), "w-in");
+  const inWaveHolder = el("g", {}, inG);
   text(85, 62, "x", "sym", inG);
   const encG = part(el("g", {}, codecOnly), "enc");
   el("polygon", { points: "175,55 320,105 320,195 175,245", class: "enc" }, encG);
@@ -107,8 +127,10 @@
   const outWaveHolder = el("g", {}, outG);
   text(782, 62, "x̂", "sym", outG);
 
-  // Decoder-only: the inside view (slide 15).
-  const decOnly = part(el("g", { class: "only-decoder" }, svg), "up");
+  // Decoder-only: the inside view (slide 15), drawn on 30–970 and scaled into the
+  // same frame as the other views.
+  const decOuter = part(el("g", { class: "only-decoder" }, svg), "up");
+  const decOnly = el("g", { transform: "translate(-12.8 11.2) scale(0.9255)" }, decOuter);
   el("polygon", { points: "30,62 970,30 970,270 30,238", class: "dec dec-big" }, decOnly);
   text(46, 46, "Decoder", "lbl lbl-left", decOnly);
   stack(decOnly, 52, 4, 26, 24, 4, "codes");
@@ -150,29 +172,41 @@
     svg.classList.remove("focus-in");
   }
 
-  // Follow the players: show the path that produced the selected clip.
+  // Follow the players: show the path that produced the selected clip, and draw the
+  // clip itself where it lives in the diagram (input x for the original, output x̂ otherwise).
+  let inW = null;
+  let outW = null;
+  let target = null;
   document.addEventListener("pd:select", (e) => {
-    const { mode: m, gen, playing, wave: w } = e.detail;
+    const { name, mode: m, gen, playing, wave: w } = e.detail;
     resetGen();
     if (gen) { genTitle.textContent = gen[0]; genSub.textContent = gen[1]; }
-    svg.classList.toggle("focus-in", e.detail.name === "original");
-    if (w) { outWaveHolder.replaceChildren(); wave(outWaveHolder, 705, 150, w, "w-out"); }
+    const isInput = name === "original";
+    svg.classList.toggle("focus-in", isInput);
+    if (w && !isInput) outW = pwave(outWaveHolder, 705, 150, w);
+    target = isInput ? inW : outW;
+    inG.classList.toggle("active", isInput);
+    outG.classList.toggle("active", !isInput);
+    svg.classList.add("has-clip");
     setMode(m);
     svg.classList.toggle("is-playing", !!playing);
   });
+  document.addEventListener("pd:progress", (e) => target && target.set(e.detail.p));
   document.addEventListener("pd:stop", () => svg.classList.remove("is-playing"));
 
   fetch(root.dataset.media)
     .then((r) => r.json())
     .then((media) => {
-      inWave.remove();
-      wave(inG, 20, 130, media.original.wave, "w-in");
-      wave(outWaveHolder, 705, 150, media.reconstruccion.wave, "w-out");
+      inW = pwave(inWaveHolder, 20, 130, media.original.wave);
+      outW = pwave(outWaveHolder, 705, 150, media.reconstruccion.wave);
       const big = [];
       for (let i = 0; i < 2; i++) big.push(...media.reconstruccion.wave);
       wave(bigWaveHolder, 528, 420, big.slice(0, 150), "w-out");
     })
-    .catch(() => wave(outWaveHolder, 705, 150, new Array(96).fill(0.3), "w-out"));
+    .catch(() => {
+      inW = pwave(inWaveHolder, 20, 130, new Array(96).fill(0.3));
+      outW = pwave(outWaveHolder, 705, 150, new Array(96).fill(0.3));
+    });
 
   setMode("codec");
 })();

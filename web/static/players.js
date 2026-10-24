@@ -1,14 +1,16 @@
-// Spectrogram players: each clip plays over its spectrogram, which lights up as it plays.
-// Selecting a clip tells the codec diagram which path produced it ("pd:select").
+// Decoder lab: a list of clips beside the codec diagram, and one spectrogram below it.
+// Playing a clip lights up its spectrogram and its waveform inside the diagram
+// ("pd:select" / "pd:progress" / "pd:stop" events, handled by codec.js).
 (function () {
-  const root = document.getElementById("spec-players");
-  if (!root) return;
+  const list = document.getElementById("spec-players");
+  const view = document.getElementById("lab-spec");
+  if (!list || !view) return;
 
   const CLIPS = [
-    { name: "original", title: "Original", desc: "Una grabación mía de guitarra.", mode: "codec" },
-    { name: "reconstruccion", title: "Reconstruida", desc: "Encoder → códigos → decoder. Casi igual, en un archivo 128 veces más chico.", mode: "codec" },
-    { name: "aleatorios", title: "Latentes al azar", desc: "Números al azar en vez de latentes reales: ruido por todas partes.", mode: "gen", gen: ["Ruido aleatorio", "torch.randn_like(latentes)"] },
-    { name: "ceros", title: "Latentes en cero", desc: "Sin información, el decoder igual suena: líneas fijas que no cambian. Es su huella.", mode: "gen", gen: ["Nada (ceros)", "torch.zeros_like(latentes)"] },
+    { name: "original", title: "Original", desc: "Mi guitarra, sin pasar por el codec.", mode: "codec" },
+    { name: "reconstruccion", title: "Reconstruida", desc: "Encoder → códigos → decoder. Casi igual, 128 veces más chico.", mode: "codec" },
+    { name: "aleatorios", title: "Latentes al azar", desc: "Números al azar en vez de latentes: ruido.", mode: "gen", gen: ["Ruido aleatorio", "torch.randn_like(latentes)"] },
+    { name: "ceros", title: "Latentes en cero", desc: "Sin información el decoder igual suena: su huella.", mode: "gen", gen: ["Nada (ceros)", "torch.zeros_like(latentes)"] },
   ];
   const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
   const ICON_PAUSE = '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
@@ -18,106 +20,130 @@
   let current = null;
   let raf = 0;
 
-  const cards = CLIPS.map((clip) => {
-    const card = document.createElement("article");
-    card.className = "sp";
-    card.innerHTML = `
-      <div class="sp-head">
-        <button class="sp-play" type="button" aria-label="Reproducir ${clip.title}">${ICON_PLAY}</button>
-        <div><b>${clip.title}</b><p>${clip.desc}</p></div>
-        <span class="sp-time">0:00</span>
-      </div>
-      <div class="sp-spec" role="slider" tabindex="0" aria-label="Posición en ${clip.title}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <img class="sp-dim" src="${root.dataset.spec}${clip.name}.jpg" alt="Espectrograma: ${clip.title}">
-        <div class="sp-lit"><img src="${root.dataset.spec}${clip.name}.jpg" alt=""></div>
-        <div class="sp-head-line"></div>
-        <div class="sp-axis" aria-hidden="true"><span>12 kHz</span><span>3</span><span>0</span></div>
-      </div>`;
+  // ---------------------------------------------------------------- spectrogram view
+  view.innerHTML = `
+    <div class="ls-head"><b></b><span class="ls-time">0:00</span></div>
+    <div class="sp-spec" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <img class="sp-dim" alt="">
+      <div class="sp-lit"><img alt=""></div>
+      <div class="sp-head-line"></div>
+      <div class="sp-axis" aria-hidden="true"><span>12 kHz</span><span>3</span><span>0</span></div>
+    </div>`;
+  const vTitle = view.querySelector(".ls-head b");
+  const vTime = view.querySelector(".ls-time");
+  const spec = view.querySelector(".sp-spec");
+  const dimImg = view.querySelector(".sp-dim");
+  const lit = view.querySelector(".sp-lit");
+  const litImg = lit.querySelector("img");
+  const headLine = view.querySelector(".sp-head-line");
+  new ResizeObserver(() => { litImg.style.width = `${spec.clientWidth}px`; }).observe(spec);
+
+  // ---------------------------------------------------------------- list
+  const items = CLIPS.map((clip) => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "lab-item";
+    row.innerHTML = `
+      <span class="sp-play" aria-hidden="true">${ICON_PLAY}</span>
+      <span class="lab-text"><b>${clip.title}</b><small>${clip.desc}</small>
+        <span class="lab-bar"><i></i></span></span>`;
+    row.setAttribute("aria-label", `Reproducir ${clip.title}`);
     const audio = new Audio();
     audio.preload = "none";
-    audio.src = `${root.dataset.audio}${clip.name}.mp3`;
-    const ui = {
-      play: card.querySelector(".sp-play"),
-      time: card.querySelector(".sp-time"),
-      spec: card.querySelector(".sp-spec"),
-      lit: card.querySelector(".sp-lit"),
-      line: card.querySelector(".sp-head-line"),
-    };
-    const c = { clip, card, audio, ui };
-    // The lit copy is clipped by its container, so it must keep the full spectrogram width.
-    const litImg = ui.lit.querySelector("img");
-    new ResizeObserver(() => { litImg.style.width = `${ui.spec.clientWidth}px`; }).observe(ui.spec);
-
-    ui.play.addEventListener("click", () => (audio.paused ? play(c) : audio.pause()));
-    ui.spec.addEventListener("click", (e) => {
-      const r = ui.spec.getBoundingClientRect();
-      seek(c, (e.clientX - r.left) / r.width);
+    audio.src = `${list.dataset.audio}${clip.name}.mp3`;
+    const it = { clip, row, audio, icon: row.querySelector(".sp-play"), bar: row.querySelector(".lab-bar i") };
+    row.addEventListener("click", () => {
+      if (current === it && !audio.paused) audio.pause();
+      else play(it);
     });
-    ui.spec.addEventListener("keydown", (e) => {
-      const step = e.key === "ArrowRight" ? 0.05 : e.key === "ArrowLeft" ? -0.05 : 0;
-      if (step) { e.preventDefault(); seek(c, progress(c) + step); }
-      if (e.key === " " || e.key === "Enter") { e.preventDefault(); ui.play.click(); }
-    });
-    audio.addEventListener("pause", () => stopped(c));
-    audio.addEventListener("ended", () => { audio.currentTime = 0; render(c); });
-    audio.addEventListener("loadedmetadata", () => render(c));
-    root.append(card);
-    return c;
+    audio.addEventListener("pause", () => stopped(it));
+    audio.addEventListener("ended", () => { audio.currentTime = 0; render(it); });
+    audio.addEventListener("loadedmetadata", () => render(it));
+    list.append(row);
+    return it;
   });
 
-  const duration = (c) => (isFinite(c.audio.duration) && c.audio.duration) || media[c.clip.name]?.duration || 1;
-  const progress = (c) => Math.min(1, c.audio.currentTime / duration(c));
+  const duration = (it) => (isFinite(it.audio.duration) && it.audio.duration) || media[it.clip.name]?.duration || 1;
+  const progress = (it) => Math.min(1, it.audio.currentTime / duration(it));
 
-  function render(c) {
-    const p = progress(c);
-    c.ui.lit.style.width = `${p * 100}%`;
-    c.ui.line.style.left = `${p * 100}%`;
-    c.ui.spec.setAttribute("aria-valuenow", String(Math.round(p * 100)));
-    c.ui.time.textContent = `${fmt(c.audio.currentTime)} / ${fmt(duration(c))}`;
+  function render(it) {
+    const p = progress(it);
+    it.bar.style.width = `${p * 100}%`;
+    if (it !== current) return;
+    lit.style.width = `${p * 100}%`;
+    headLine.style.left = `${p * 100}%`;
+    spec.setAttribute("aria-valuenow", String(Math.round(p * 100)));
+    vTime.textContent = `${fmt(it.audio.currentTime)} / ${fmt(duration(it))}`;
+    document.dispatchEvent(new CustomEvent("pd:progress", { detail: { name: it.clip.name, p } }));
   }
 
-  function select(c, playing) {
-    cards.forEach((x) => x.card.classList.toggle("is-current", x === c));
+  function show(it, playing) {
+    current = it;
+    items.forEach((x) => x.row.classList.toggle("is-current", x === it));
+    const src = `${list.dataset.spec}${it.clip.name}.jpg`;
+    dimImg.src = src;
+    litImg.src = src;
+    dimImg.alt = `Espectrograma: ${it.clip.title}`;
+    vTitle.textContent = it.clip.title;
+    spec.setAttribute("aria-label", `Posición en ${it.clip.title}`);
     document.dispatchEvent(new CustomEvent("pd:select", {
-      detail: { ...c.clip, playing, wave: media[c.clip.name]?.wave },
+      detail: { ...it.clip, playing, wave: media[it.clip.name]?.wave },
     }));
+    render(it);
   }
 
-  function play(c) {
-    if (current && current !== c) current.audio.pause();
-    current = c;
-    c.audio.play().then(() => {
-      c.card.classList.add("is-playing");
-      c.ui.play.innerHTML = ICON_PAUSE;
-      c.ui.play.setAttribute("aria-label", `Pausar ${c.clip.title}`);
-      select(c, true);
+  function play(it) {
+    if (current && current !== it) current.audio.pause();
+    show(it, true);
+    it.audio.play().then(() => {
+      it.row.classList.add("is-playing");
+      it.icon.innerHTML = ICON_PAUSE;
+      it.row.setAttribute("aria-label", `Pausar ${it.clip.title}`);
+      document.dispatchEvent(new CustomEvent("pd:select", {
+        detail: { ...it.clip, playing: true, wave: media[it.clip.name]?.wave },
+      }));
       cancelAnimationFrame(raf);
       const tick = () => {
-        render(c);
-        if (!c.audio.paused) raf = requestAnimationFrame(tick);
+        render(it);
+        if (!it.audio.paused) raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     }).catch(() => {});
   }
 
-  function stopped(c) {
-    c.card.classList.remove("is-playing");
-    c.ui.play.innerHTML = ICON_PLAY;
-    c.ui.play.setAttribute("aria-label", `Reproducir ${c.clip.title}`);
-    render(c);
-    if (current === c) document.dispatchEvent(new Event("pd:stop"));
+  function stopped(it) {
+    it.row.classList.remove("is-playing");
+    it.icon.innerHTML = ICON_PLAY;
+    it.row.setAttribute("aria-label", `Reproducir ${it.clip.title}`);
+    render(it);
+    if (current === it) document.dispatchEvent(new Event("pd:stop"));
   }
 
-  function seek(c, frac) {
+  function seek(frac) {
+    const it = current;
     const f = Math.min(Math.max(frac, 0), 0.999);
-    const apply = () => { c.audio.currentTime = f * duration(c); render(c); };
-    if (c.audio.readyState >= 1) apply();
-    else { c.audio.preload = "metadata"; c.audio.addEventListener("loadedmetadata", apply, { once: true }); c.audio.load(); }
-    if (c.audio.paused) select(c, false);
+    const apply = () => { it.audio.currentTime = f * duration(it); render(it); };
+    if (it.audio.readyState >= 1) apply();
+    else { it.audio.preload = "metadata"; it.audio.addEventListener("loadedmetadata", apply, { once: true }); it.audio.load(); }
   }
+  spec.addEventListener("click", (e) => {
+    const r = spec.getBoundingClientRect();
+    seek((e.clientX - r.left) / r.width);
+  });
+  spec.addEventListener("keydown", (e) => {
+    const step = e.key === "ArrowRight" ? 0.05 : e.key === "ArrowLeft" ? -0.05 : 0;
+    if (step) { e.preventDefault(); seek(progress(current) + step); }
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); current.row.click(); }
+  });
 
-  fetch(root.dataset.media)
+  // Show the original until something is played (without touching the diagram).
+  current = items[0];
+  items[0].row.classList.add("is-current");
+  dimImg.src = litImg.src = `${list.dataset.spec}original.jpg`;
+  vTitle.textContent = "Elige un audio y dale play";
+
+  fetch(list.dataset.media)
     .then((r) => r.json())
-    .then((m) => { media = m; cards.forEach(render); })
-    .catch(() => cards.forEach(render));
+    .then((m) => { media = m; items.forEach(render); })
+    .catch(() => {});
 })();

@@ -110,7 +110,15 @@
     <div class="prose">
       <p>Muchos generadores de música trabajan sobre un <b>codec neuronal</b>: algo parecido a un MP3, pero hecho con redes neuronales. El encoder comprime el audio en <b>latentes</b>; el decoder los convierte de vuelta en sonido. Un modelo generativo inventa latentes nuevos, y el decoder los vuelve música.</p>
     </div>
-    <div class="diagram" id="codec-diagram" data-media="static/media.json"></div>
+    <div class="lab">
+      <div class="diagram" id="codec-diagram" data-media="static/media.json"></div>
+      <aside class="lab-side">
+        <p class="lab-label">Escucha lo que sale del decoder</p>
+        <div class="lab-list" id="spec-players" data-spec="static/spec/" data-audio="assets/examples/02/" data-media="static/media.json"></div>
+        <p class="lab-note">Todos al mismo volumen. Mira cómo cambia el diagrama y el espectrograma mientras suena.</p>
+      </aside>
+      <div class="lab-spec" id="lab-spec"></div>
+    </div>
 
 <pre><code class="language-python">model = EncodecModel.from_pretrained("facebook/encodec_24khz").eval()
 y, sr = librosa.load("audio/guitar.mp3", sr=24_000)
@@ -123,9 +131,6 @@ with torch.no_grad():
     ceros = model.decoder(torch.zeros_like(latentes))</code></pre>
     <p class="code-link small muted">Versión corta. Completo, con los códigos y más experimentos: <a href="https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/02_codec_latentes.py">examples/02_codec_latentes.py</a></p>
 
-    <h3>Escucha lo que sale del decoder</h3>
-    <div class="prose"><p>Dale play y mira el espectrograma mientras suena. Todos están al mismo volumen y en la misma escala de colores.</p></div>
-    <div class="sp-grid" id="spec-players" data-spec="static/spec/" data-audio="assets/examples/02/" data-media="static/media.json"></div>
     <div class="callout">El decoder no sabe qué latentes suenan a música. Inventar latentes que tengan sentido es justo lo que aprende un modelo generativo.</div>
   </div>
 </section>

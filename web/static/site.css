@@ -326,6 +326,10 @@ footer .pyday img { width: 22px; }
 .dg-tabs button { border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: #5b6278; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
 .dg-tabs button[aria-selected="true"] { background: #1d2550; color: #fff; }
 .dg { display: block; width: 100%; height: auto; overflow: visible; }
+@media (max-width: 600px) {
+  .diagram { overflow-x: auto; }
+  .dg { min-width: 620px; }
+}
 .dg text { font-family: var(--sans); fill: #1d2550; text-anchor: middle; dominant-baseline: middle; }
 .dg .lbl { font-size: 19px; font-weight: 500; }
 .dg .lbl-left { text-anchor: start; font-weight: 700; font-size: 16px; }
@@ -368,17 +372,39 @@ footer .pyday img { width: 22px; }
 .dg-caption { margin: 6px 4px 0; min-height: 3em; font-size: 16px; color: #3c4260; }
 @media (prefers-reduced-motion: reduce) { .dg .flow, .dg.is-playing .decg polygon { animation: none; } }
 
-/* ---------- Spectrogram players ---------- */
-.sp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 20px 0; }
-.sp { display: flex; flex-direction: column; background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; transition: border-color 0.25s, box-shadow 0.25s; }
-.sp .sp-spec { margin-top: auto; }
-.sp.is-current { border-color: var(--magenta); }
-.sp.is-playing { box-shadow: 0 10px 30px -18px rgba(233, 7, 123, 0.7); }
-.sp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; margin-bottom: 10px; }
-.sp-head b { display: block; font-size: 17px; line-height: 1.2; }
-.sp-head p { margin: 2px 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
-.sp-time { font-family: var(--mono); font-size: 13px; color: var(--muted); white-space: nowrap; padding-top: 2px; }
-.sp-play { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--gradient); color: #fff; display: grid; place-items: center; cursor: pointer; }
+/* ---------- Decoder lab: diagram + clip list + spectrogram ---------- */
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) 264px; grid-template-areas: "diag side" "spec side"; gap: 14px 18px; margin: 24px 0 8px; align-items: start; }
+.lab .diagram { grid-area: diag; margin: 0; }
+.lab-side { grid-area: side; display: flex; flex-direction: column; gap: 8px; position: sticky; top: 76px; }
+.lab-spec { grid-area: spec; }
+.lab-label { margin: 0 0 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lab-note { margin: 4px 0 0; font-size: 14px; color: var(--muted); line-height: 1.45; }
+.lab-list { display: flex; flex-direction: column; gap: 8px; }
+.lab-item { display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+.lab-item:hover { border-color: var(--pill-line); transform: translateX(-2px); }
+.lab-item.is-current { border-color: var(--magenta); }
+.lab-item.is-playing { box-shadow: 0 10px 26px -16px rgba(233, 7, 123, 0.75); }
+.lab-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.lab-text b { font-size: 16px; line-height: 1.2; }
+.lab-text small { font-size: 13.5px; line-height: 1.35; color: var(--muted); margin-top: 2px; }
+.lab-bar { display: block; height: 3px; border-radius: 2px; background: var(--line); margin-top: 8px; overflow: hidden; }
+.lab-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--magenta), var(--blue)); }
+.ls-head { display: flex; justify-content: space-between; align-items: baseline; margin: 2px 2px 6px; font-size: 15px; }
+.ls-time { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.lab-spec .sp-spec { height: 170px; }
+@media (max-width: 900px) {
+  .lab { grid-template-columns: minmax(0, 1fr); grid-template-areas: "diag" "side" "spec"; }
+  .lab-side { position: static; }
+}
+
+/* Waveforms in the diagram show the clip that is playing. */
+.dg .wv-lit { stroke: #e9077b; }
+.dg .whead { stroke: #e9077b; stroke-width: 2; opacity: 0; }
+.dg.has-clip .active .whead { opacity: 1; }
+.dg.has-clip .active .pw > .wv:first-child { stroke: #b9bdcc; }
+
+/* ---------- Spectrogram (shared by the lab view) ---------- */
+.sp-play { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 0; background: var(--gradient); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .sp-play svg { width: 17px; height: 17px; fill: currentColor; }
 .sp-spec { position: relative; height: 150px; border-radius: 10px; overflow: hidden; cursor: pointer; background: #070a1f; }
 .sp-spec img { position: absolute; top: 0; left: 0; height: 100%; max-width: none; object-fit: fill; }
@@ -387,7 +413,6 @@ footer .pyday img { width: 22px; }
 .sp-lit { position: absolute; inset: 0 auto 0 0; width: 0; overflow: hidden; }
 .sp-head-line { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; background: #fff; box-shadow: 0 0 8px rgba(255, 255, 255, 0.8); pointer-events: none; }
 .sp-axis { position: absolute; inset: 4px auto 4px 6px; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: rgba(255, 255, 255, 0.8); pointer-events: none; }
-@media (max-width: 760px) { .sp-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- Syntax highlighting (Prism tokens) ---------- */
 :root { --tk-kw: #a2185c; --tk-fn: #005a9e; --tk-str: #2e7d4f; --tk-num: #b5560a; --tk-com: #7b8199; --tk-op: #4a4f6a; }
