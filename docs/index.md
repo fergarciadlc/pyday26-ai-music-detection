@@ -11,7 +11,7 @@ hide:
 
 <img class="pd-wordmark" src="assets/brand/pyday-wordmark.png" alt="PyDay México 2026">
 
-# Detección de IA en música
+# Detección de música generada por IA
 
 <p class="pd-lead">Detección de música generada por inteligencia artificial</p>
 

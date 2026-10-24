@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Detección de IA en música · PyDay México 2026</title>
+<title>Detección de música generada por IA · PyDay México 2026</title>
 <meta name="description" content="Cómo se genera la música con IA, cómo se detecta y por qué no es tan fácil como parece. Charla de Fernando Garcia de la Cruz en PyDay México 2026.">
 <meta name="author" content="Fernando Garcia de la Cruz">
 <link rel="icon" href="assets/brand/pyday-snake.png">
@@ -16,7 +16,7 @@
 
 <nav class="top" aria-label="Secciones">
   <div class="wrap">
-    <a class="brand" href="#"><span><img src="assets/brand/pyday-snake.png" alt=""></span>Detección de IA en música</a>
+    <a class="brand" href="#"><span><img src="assets/brand/pyday-snake.png" alt=""></span>Detección de música generada por IA</a>
     <a class="link" href="#experimento">Experimento</a>
     <a class="link" href="#genera">Generación</a>
     <a class="link" href="#detecta">Detección</a>
@@ -30,7 +30,7 @@
   <div class="wrap hero-grid">
     <div>
       <p class="kicker">PyDay México 2026</p>
-      <h1>Detección de IA en música</h1>
+      <h1>Detección de música generada por IA</h1>
       <p class="subtitle">Cómo se genera la música con IA, cómo se detecta y por qué no es tan fácil como parece.</p>
       <p class="author">Fernando Garcia de la Cruz</p>
       <p class="affil">Research engineer · machine learning y procesamiento de señales para audio y música</p>
@@ -110,30 +110,22 @@
     <div class="prose">
       <p>Muchos generadores de música trabajan sobre un <b>codec neuronal</b>: algo parecido a un MP3, pero hecho con redes neuronales. El encoder comprime el audio en <b>latentes</b>; el decoder los convierte de vuelta en sonido. Un modelo generativo inventa latentes nuevos, y el decoder los vuelve música.</p>
     </div>
-    <div class="flow" aria-label="Diagrama del codec">
-      <span class="flow-label">Codec (autoencoder)</span>
-      <span>Audio</span><i>→</i><span>Encoder</span><i>→</i><span>Latentes</span><i>→</i><span class="hl">Decoder</span><i>→</i><span>Audio</span>
-      <span class="flow-label">Generación</span>
-      <span>Modelo generativo</span><i>→</i><span>Latentes nuevos</span><i>→</i><span class="hl">Decoder</span><i>→</i><span>Audio nuevo</span>
-    </div>
+    <div class="diagram" id="codec-diagram" data-media="static/media.json"></div>
 
-<pre><code>model = EncodecModel.from_pretrained("facebook/encodec_24khz").eval()
+<pre><code class="language-python">model = EncodecModel.from_pretrained("facebook/encodec_24khz").eval()
 y, sr = librosa.load("audio/guitar.mp3", sr=24_000)
 x = torch.from_numpy(y)[None, None]
 
 with torch.no_grad():
-    latentes = model.encoder(x)        <span class="c"># (1, 128, 1303): 75 vectores por segundo</span>
-    audio = model.decoder(latentes)    <span class="c"># de vuelta a 416,689 muestras</span>
+    latentes = model.encoder(x)        # (1, 128, 1303): 75 vectores por segundo
+    audio = model.decoder(latentes)    # de vuelta a 416,689 muestras
     azar = model.decoder(torch.randn_like(latentes) * latentes.std() + latentes.mean())
     ceros = model.decoder(torch.zeros_like(latentes))</code></pre>
     <p class="code-link small muted">Versión corta. Completo, con los códigos y más experimentos: <a href="https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/02_codec_latentes.py">examples/02_codec_latentes.py</a></p>
 
-    <div class="players">
-      <div class="player"><b>Original</b><p>Una grabación mía de guitarra.</p><audio controls preload="none" src="assets/examples/02/original.mp3"></audio></div>
-      <div class="player"><b>Reconstruida</b><p>Encoder → decoder. Casi igual.</p><audio controls preload="none" src="assets/examples/02/reconstruccion.mp3"></audio></div>
-      <div class="player"><b>Latentes al azar</b><p>Suena a ruido.</p><audio controls preload="none" src="assets/examples/02/aleatorios.mp3"></audio></div>
-      <div class="player"><b>Latentes en cero</b><p>Un zumbido constante: la huella del decoder, sola.</p><audio controls preload="none" src="assets/examples/02/ceros.mp3"></audio></div>
-    </div>
+    <h3>Escucha lo que sale del decoder</h3>
+    <div class="prose"><p>Dale play y mira el espectrograma mientras suena. Todos están al mismo volumen y en la misma escala de colores.</p></div>
+    <div class="sp-grid" id="spec-players" data-spec="static/spec/" data-audio="assets/examples/02/" data-media="static/media.json"></div>
     <div class="callout">El decoder no sabe qué latentes suenan a música. Inventar latentes que tengan sentido es justo lo que aprende un modelo generativo.</div>
   </div>
 </section>
@@ -147,16 +139,16 @@ with torch.no_grad():
       <p>Convertimos el audio en un <b>espectrograma</b> y lo tratamos como un problema de visión por computadora: una red neuronal convolucional aprende a separar audio real de audio que pasó por el decoder.</p>
     </div>
 
-<pre><code>y, sr = librosa.load("song.wav", sr=24_000)
+<pre><code class="language-python">y, sr = librosa.load("song.wav", sr=24_000)
 S = np.abs(librosa.stft(y, n_fft=2048, hop_length=512))
-S_db = librosa.amplitude_to_db(S, ref=np.max)   <span class="c"># (1025, n_frames): una imagen</span></code></pre>
+S_db = librosa.amplitude_to_db(S, ref=np.max)   # (1025, n_frames): una imagen</code></pre>
 
     <h3>Un detector binario en PyTorch</h3>
     <div class="prose"><p>El truco de los datos sintéticos: tomamos canciones reales (<a href="https://sigsep.github.io/datasets/musdb.html">MUSDB18</a>) y las pasamos por EnCodec. La música es la misma; solo cambian las marcas del decoder.</p></div>
 
     <div class="figure"><img src="static/cnn.svg" alt="Arquitectura del detector: espectrograma, seis bloques convolucionales de 16 a 512 filtros, promedio global, capa densa de 128 y una sigmoide que da la probabilidad de IA."></div>
 
-<pre><code>def conv_block(c_in: int, c_out: int) -&gt; nn.Sequential:
+<pre><code class="language-python">def conv_block(c_in: int, c_out: int) -&gt; nn.Sequential:
     return nn.Sequential(
         nn.Conv2d(c_in, c_out, 3, padding=1), nn.BatchNorm2d(c_out), nn.ReLU(), nn.MaxPool2d(2)
     )
@@ -166,9 +158,9 @@ model = nn.Sequential(
     nn.BatchNorm2d(1),
     conv_block(1, 16), conv_block(16, 32), conv_block(32, 64),
     conv_block(64, 128), conv_block(128, 256), conv_block(256, 512),
-    nn.AdaptiveAvgPool2d(1), nn.Flatten(),  <span class="c"># promedio global</span>
-    nn.Linear(512, 128), nn.ReLU(),         <span class="c"># capa densa de 128</span>
-    nn.Linear(128, 1),                      <span class="c"># 1 logit: 0 humano, 1 IA</span>
+    nn.AdaptiveAvgPool2d(1), nn.Flatten(),  # promedio global
+    nn.Linear(512, 128), nn.ReLU(),         # capa densa de 128
+    nn.Linear(128, 1),                      # 1 logit: 0 humano, 1 IA
 )
 loss_fn = nn.BCEWithLogitsLoss()</code></pre>
     <p class="code-link small muted">Datos, entrenamiento y evaluación: <a href="https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/03_detector_pytorch.py">examples/03_detector_pytorch.py</a> (unos 3 minutos en una laptop).</p>
@@ -249,6 +241,10 @@ loss_fn = nn.BCEWithLogitsLoss()</code></pre>
 </footer>
 
 <script src="assets/js/quiz.js"></script>
+<script src="static/codec.js"></script>
+<script src="static/players.js"></script>
 <script src="assets/js/fakeprints.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 </body>
 </html>

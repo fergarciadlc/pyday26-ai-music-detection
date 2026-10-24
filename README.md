@@ -1,6 +1,6 @@
-# Detección de IA en música · PyDay México 2026
+# Detección de música generada por IA · PyDay México 2026
 
-Companion website and material for the talk **"Detección de IA en música"** by Fernando
+Companion website and material for the talk **"Detección de música generada por IA"** by Fernando
 Garcia de la Cruz at PyDay México 2026.
 
 🌐 **Site:** https://fergarciadlc.github.io/pyday26-ai-music-detection
@@ -59,6 +59,7 @@ Regenerate the assets (downloads EnCodec from Hugging Face; needs `ffmpeg`):
 uv run --group audio scripts/build_fakeprints.py audio/guitar.mp3
 uv run scripts/prepare_quiz_audio.py
 uv run scripts/build_cnn_diagram.py ../ismir26-how-much-ai/assets/diagrams/architecture.svg web/static/cnn.svg
+uv run --group audio scripts/build_v2_media.py   # after examples/02: spectrograms + waveforms for web/
 ```
 
 ## Deploy
