@@ -90,21 +90,20 @@ versión de EnCodec) y los clips de Suno del [experimento del inicio](../quiz.md
 
 | Audio | Qué es | Probabilidad de "IA" | ¿Acertó? |
 |---|---|---|---|
-| Mi guitarra | Humana | 0.62 | :material-close: Duda, y se inclina por IA |
-| Mi guitarra + EnCodec | Pasó por el decoder que conoce | 1.00 | :material-check: |
-| Clip 3 | IA (Suno) | 0.003 | :material-close: |
-| Clip 4 | Híbrida (mi guitarra + base de Suno) | 0.22 | :material-close: Ni sí ni no |
-| Clip 5 | IA (Suno) | 0.001 | :material-close: |
+| Mi guitarra | Humana | 0.00 | :material-check: |
+| Mi guitarra + EnCodec | Pasó por el decoder que conoce | 0.98 | :material-check: |
+| Clip 3 | IA (Suno) | 0.00 | :material-close: |
+| Clip 4 | Híbrida (mi guitarra + base de Suno) | 0.00 | :material-close: |
+| Clip 5 | IA (Suno) | 0.00 | :material-close: |
 
 El detector reconoce perfecto el decoder que conoce, pero:
 
-- **No generaliza.** Solo vio EnCodec, y los clips de Suno los da por humanos con muchísima
+- **No generaliza.** Solo vio EnCodec, y los clips de Suno los da por humanos con total
   seguridad. Cada plataforma tiene su propio decoder y su propia huella, así que cada generador
   nuevo exige volver a entrenar el detector. Y conforme la detección mejora, las plataformas
   pueden hacer que sus modelos dejen menos huellas: es una carrera armamentista.
-- **Se confunde con audio diferente al de entrenamiento.** Mi grabación casera, guardada como
-  MP3, le parece sospechosa. Cualquier transformación (otro formato, cambiar el tono, recomprimir)
-  puede borrar parte de la huella o crear algo que se le parezca.
+- **Es frágil ante transformaciones.** Cambiar el tono o recomprimir el audio puede borrar parte
+  de la huella, y el detector deja de reconocerla.
 - **Solo sabe decir sí o no.** Para el clip híbrido no hay respuesta correcta en un sistema
   binario. La pregunta interesante es **cuánta IA** tiene esa canción, y de eso trata
   [mi investigación](https://arxiv.org/abs/2608.07285).

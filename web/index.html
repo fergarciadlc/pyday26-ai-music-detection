@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detección de IA en música · PyDay México 2026</title>
+<meta name="description" content="Cómo se genera la música con IA, cómo se detecta y por qué no es tan fácil como parece. Charla de Fernando Garcia de la Cruz en PyDay México 2026.">
+<meta name="author" content="Fernando Garcia de la Cruz">
+<link rel="icon" href="assets/brand/pyday-snake.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/site.css">
+</head>
+<body>
+
+<nav class="top" aria-label="Secciones">
+  <div class="wrap">
+    <a class="brand" href="#"><span><img src="assets/brand/pyday-snake.png" alt=""></span>Detección de IA en música</a>
+    <a class="link" href="#experimento">Experimento</a>
+    <a class="link" href="#genera">Generación</a>
+    <a class="link" href="#detecta">Detección</a>
+    <a class="link" href="#fakeprints">Fakeprints</a>
+    <a class="link" href="#recursos">Recursos</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="bars" aria-hidden="true"><span></span><span></span></div>
+  <div class="wrap hero-grid">
+    <div>
+      <p class="kicker">PyDay México 2026</p>
+      <h1>Detección de IA en música</h1>
+      <p class="subtitle">Cómo se genera la música con IA, cómo se detecta y por qué no es tan fácil como parece.</p>
+      <p class="author">Fernando Garcia de la Cruz</p>
+      <p class="affil">Research engineer · machine learning y procesamiento de señales para audio y música</p>
+      <div class="buttons">
+        <a class="btn primary" href="assets/slides/pyday26mx-ai-music-detection.pdf"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Slides</a>
+        <a class="btn" href="https://github.com/fergarciadlc/pyday26-ai-music-detection"><svg viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>Código</a>
+        <a class="btn" href="https://arxiv.org/abs/2608.07285"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Paper ISMIR 2026</a>
+      </div>
+    </div>
+    <div class="poster" aria-hidden="true">
+      <img class="wordmark" src="assets/brand/pyday-wordmark.png" alt="">
+      <img class="logo" src="assets/brand/pyday-logo.png" alt="">
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ Experimento -->
+<section id="experimento">
+  <div class="wrap">
+    <p class="kicker">Antes de empezar</p>
+    <h2>¿Cuál es IA?</h2>
+    <div class="prose"><p>Escucha estos fragmentos y trata de adivinar cuáles hizo una persona y cuáles una inteligencia artificial.</p></div>
+
+    <div class="pd-quiz">
+      <article class="pd-clip" data-answer="human">
+        <header><span class="pd-clip-n">1</span></header>
+        <a class="pd-media pd-yt" href="https://www.youtube.com/watch?v=rXKIjMsZGSM" target="_blank" rel="noopener">▶ Escuchar en YouTube</a>
+        <button class="btn pd-reveal" type="button">Revelar</button>
+        <div class="pd-answer" hidden><p class="pd-verdict">Humana</p><p><em>Blanco y Negro</em>, de LAGOS y Elena Rose.</p></div>
+      </article>
+      <article class="pd-clip" data-answer="human">
+        <header><span class="pd-clip-n">2</span></header>
+        <a class="pd-media pd-yt" href="https://www.youtube.com/watch?v=m3lF2qEA2cw" target="_blank" rel="noopener">▶ Escuchar en YouTube</a>
+        <button class="btn pd-reveal" type="button">Revelar</button>
+        <div class="pd-answer" hidden><p class="pd-verdict">Humana</p><p>Cover de <em>Creep</em> de Postmodern Jukebox, con Haley Reinhart.</p></div>
+      </article>
+      <article class="pd-clip" data-answer="ai">
+        <header><span class="pd-clip-n">3</span></header>
+        <div class="pd-media"><audio controls preload="none" src="assets/quiz/clip-3.mp3"></audio></div>
+        <button class="btn pd-reveal" type="button">Revelar</button>
+        <div class="pd-answer" hidden><p class="pd-verdict">IA</p><p><em>Sink Full of Sun</em>, generada con Suno.</p></div>
+      </article>
+      <article class="pd-clip" data-answer="hybrid">
+        <header><span class="pd-clip-n">4</span></header>
+        <div class="pd-media"><audio controls preload="none" src="assets/quiz/clip-4.mp3"></audio></div>
+        <button class="btn pd-reveal" type="button">Revelar</button>
+        <div class="pd-answer" hidden><p class="pd-verdict">Híbrida</p><p>Yo toco la guitarra; Suno hizo la base.</p></div>
+      </article>
+      <article class="pd-clip" data-answer="ai">
+        <header><span class="pd-clip-n">5</span></header>
+        <div class="pd-media"><audio controls preload="none" src="assets/quiz/clip-5.mp3"></audio></div>
+        <button class="btn pd-reveal" type="button">Revelar</button>
+        <div class="pd-answer" hidden><p class="pd-verdict">IA</p><p><em>Sink Full of Dishes</em>, generada con Suno.</p></div>
+      </article>
+      <article class="pd-clip" data-answer="ai">
+        <header><span class="pd-clip-n">6</span></header>
+        <a class="pd-media pd-yt" href="https://www.youtube.com/watch?v=kIbWNXcYG0k" target="_blank" rel="noopener">▶ Escuchar en YouTube</a>
+        <button class="btn pd-reveal" type="button">Revelar</button>
+        <div class="pd-answer" hidden><p class="pd-verdict">IA</p><p><em>Walking Away</em> de Sadie Winters, hecha con Suno. La popularizó Rick Beato.</p></div>
+      </article>
+    </div>
+    <p><button class="btn pd-reveal-all" type="button">Revelar todas</button></p>
+
+    <div class="grid c2" style="margin-top:28px">
+      <div class="card stat"><b>97%</b><span>no supo distinguir una canción hecha con IA de una hecha por personas.</span></div>
+      <div class="card stat"><b>80%</b><span>quiere saber si una canción es de IA.</span></div>
+    </div>
+    <p class="caption">Encuesta de Deezer e Ipsos a 9,000 personas en 8 países, noviembre 2025. En Deezer, más de la mitad de lo que se sube cada día ya es 100% IA, pero es apenas el 1–3% de lo que se escucha.</p>
+  </div>
+</section>
+
+<!-- ============================================================ Generación -->
+<section id="genera">
+  <div class="wrap">
+    <p class="kicker">01 · Cómo se genera</p>
+    <h2>Todo pasa por un decoder</h2>
+    <div class="prose">
+      <p>Muchos generadores de música trabajan sobre un <b>codec neuronal</b>: algo parecido a un MP3, pero hecho con redes neuronales. El encoder comprime el audio en <b>latentes</b>; el decoder los convierte de vuelta en sonido. Un modelo generativo inventa latentes nuevos, y el decoder los vuelve música.</p>
+    </div>
+    <div class="flow" aria-label="Diagrama del codec">
+      <span class="flow-label">Codec (autoencoder)</span>
+      <span>Audio</span><i>→</i><span>Encoder</span><i>→</i><span>Latentes</span><i>→</i><span class="hl">Decoder</span><i>→</i><span>Audio</span>
+      <span class="flow-label">Generación</span>
+      <span>Modelo generativo</span><i>→</i><span>Latentes nuevos</span><i>→</i><span class="hl">Decoder</span><i>→</i><span>Audio nuevo</span>
+    </div>
+
+<pre><code>model = EncodecModel.from_pretrained("facebook/encodec_24khz").eval()
+y, sr = librosa.load("audio/guitar.mp3", sr=24_000)
+x = torch.from_numpy(y)[None, None]
+
+with torch.no_grad():
+    latentes = model.encoder(x)        <span class="c"># (1, 128, 1303): 75 vectores por segundo</span>
+    audio = model.decoder(latentes)    <span class="c"># de vuelta a 416,689 muestras</span>
+    azar = model.decoder(torch.randn_like(latentes) * latentes.std() + latentes.mean())
+    ceros = model.decoder(torch.zeros_like(latentes))</code></pre>
+    <p class="code-link small muted">Versión corta. Completo, con los códigos y más experimentos: <a href="https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/02_codec_latentes.py">examples/02_codec_latentes.py</a></p>
+
+    <div class="players">
+      <div class="player"><b>Original</b><p>Una grabación mía de guitarra.</p><audio controls preload="none" src="assets/examples/02/original.mp3"></audio></div>
+      <div class="player"><b>Reconstruida</b><p>Encoder → decoder. Casi igual.</p><audio controls preload="none" src="assets/examples/02/reconstruccion.mp3"></audio></div>
+      <div class="player"><b>Latentes al azar</b><p>Suena a ruido.</p><audio controls preload="none" src="assets/examples/02/aleatorios.mp3"></audio></div>
+      <div class="player"><b>Latentes en cero</b><p>Un zumbido constante: la huella del decoder, sola.</p><audio controls preload="none" src="assets/examples/02/ceros.mp3"></audio></div>
+    </div>
+    <div class="callout">El decoder no sabe qué latentes suenan a música. Inventar latentes que tengan sentido es justo lo que aprende un modelo generativo.</div>
+  </div>
+</section>
+
+<!-- ============================================================ Detección -->
+<section id="detecta">
+  <div class="wrap">
+    <p class="kicker">02 · Cómo se detecta</p>
+    <h2>El audio como imagen</h2>
+    <div class="prose">
+      <p>Convertimos el audio en un <b>espectrograma</b> y lo tratamos como un problema de visión por computadora: una red neuronal convolucional aprende a separar audio real de audio que pasó por el decoder.</p>
+    </div>
+
+<pre><code>y, sr = librosa.load("song.wav", sr=24_000)
+S = np.abs(librosa.stft(y, n_fft=2048, hop_length=512))
+S_db = librosa.amplitude_to_db(S, ref=np.max)   <span class="c"># (1025, n_frames): una imagen</span></code></pre>
+
+    <h3>Un detector binario en PyTorch</h3>
+    <div class="prose"><p>El truco de los datos sintéticos: tomamos canciones reales (<a href="https://sigsep.github.io/datasets/musdb.html">MUSDB18</a>) y las pasamos por EnCodec. La música es la misma; solo cambian las marcas del decoder.</p></div>
+
+    <div class="figure"><img src="static/cnn.svg" alt="Arquitectura del detector: espectrograma, seis bloques convolucionales de 16 a 512 filtros, promedio global, capa densa de 128 y una sigmoide que da la probabilidad de IA."></div>
+
+<pre><code>def conv_block(c_in: int, c_out: int) -&gt; nn.Sequential:
+    return nn.Sequential(
+        nn.Conv2d(c_in, c_out, 3, padding=1), nn.BatchNorm2d(c_out), nn.ReLU(), nn.MaxPool2d(2)
+    )
+
+
+model = nn.Sequential(
+    nn.BatchNorm2d(1),
+    conv_block(1, 16), conv_block(16, 32), conv_block(32, 64),
+    conv_block(64, 128), conv_block(128, 256), conv_block(256, 512),
+    nn.AdaptiveAvgPool2d(1), nn.Flatten(),  <span class="c"># promedio global</span>
+    nn.Linear(512, 128), nn.ReLU(),         <span class="c"># capa densa de 128</span>
+    nn.Linear(128, 1),                      <span class="c"># 1 logit: 0 humano, 1 IA</span>
+)
+loss_fn = nn.BCEWithLogitsLoss()</code></pre>
+    <p class="code-link small muted">Datos, entrenamiento y evaluación: <a href="https://github.com/fergarciadlc/pyday26-ai-music-detection/blob/main/examples/03_detector_pytorch.py">examples/03_detector_pytorch.py</a> (unos 3 minutos en una laptop).</p>
+
+    <h3>¿Problema resuelto?</h3>
+    <div class="grid c2">
+      <div>
+        <div class="card stat"><b>100%</b><span>de acierto en canciones de prueba de MUSDB18, desde la primera época.</span></div>
+        <div class="prose" style="margin-top:16px"><p>Pero el detector solo conoce un decoder. Los clips de Suno, que tienen otro, los da por humanos con total seguridad.</p></div>
+      </div>
+      <table>
+        <thead><tr><th>Audio</th><th>P(IA)</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Mi guitarra</td><td class="num">0.00</td><td class="ok">✓</td></tr>
+          <tr><td>Mi guitarra + EnCodec</td><td class="num">0.98</td><td class="ok">✓</td></tr>
+          <tr><td>Clip 3 · Suno</td><td class="num">0.00</td><td class="ko">✗</td></tr>
+          <tr><td>Clip 4 · híbrida</td><td class="num">0.00</td><td class="ko">✗</td></tr>
+          <tr><td>Clip 5 · Suno</td><td class="num">0.00</td><td class="ko">✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Fakeprints -->
+<section id="fakeprints">
+  <div class="wrap">
+    <p class="kicker">03 · Qué aprende el detector</p>
+    <h2>Fakeprints</h2>
+    <div class="prose">
+      <p>Las capas de upsampling del decoder dejan picos en frecuencias fijas. En EnCodec caen cada <b>600 Hz</b>. No se oyen ni se ven en el espectrograma, pero aparecen al promediar todo el audio. Dale play y cambia entre Original y EnCodec.</p>
+    </div>
+    <div id="fp-panel" data-base="assets/fakeprints/"></div>
+    <p class="caption">Una sola grabación, para ilustrar la idea. El estudio completo: Afchar et al., <a href="https://arxiv.org/abs/2506.19108"><em>A Fourier Explanation of AI-music Artifacts</em></a>, ISMIR 2025.</p>
+  </div>
+</section>
+
+<!-- ============================================================ Para llevar -->
+<section id="llevar">
+  <div class="wrap">
+    <h2>Para llevar</h2>
+    <div class="grid c3">
+      <div class="take"><b>El oído ya no alcanza</b><p>Casi nadie distingue la música generada por IA con solo escucharla.</p></div>
+      <div class="take"><b>Los detectores ven la huella del decoder</b><p>Funcionan casi perfecto con lo que conocen, pero son frágiles ante generadores nuevos y transformaciones.</p></div>
+      <div class="take"><b>Sí o no ya no basta</b><p>Muchas canciones mezclan pistas humanas y generadas. La pregunta es <a href="https://arxiv.org/abs/2608.07285">cuánta IA</a> tienen.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Recursos -->
+<section id="recursos">
+  <div class="wrap">
+    <h2>Recursos</h2>
+    <div class="grid c2">
+      <ul class="refs">
+        <li><a href="https://arxiv.org/abs/2608.07285">How Much AI Is in This Track?</a><span>Garcia de la Cruz et al., ISMIR 2026 · mi investigación sobre contenido híbrido</span></li>
+        <li><a href="https://arxiv.org/abs/2501.10111">AI-Generated Music Detection and its Challenges</a><span>Afchar et al., ICASSP 2025 · el detector binario de Deezer</span></li>
+        <li><a href="https://arxiv.org/abs/2506.19108">A Fourier Explanation of AI-music Artifacts</a><span>Afchar et al., ISMIR 2025 · los fakeprints</span></li>
+        <li><a href="https://distill.pub/2016/deconv-checkerboard/">Deconvolution and Checkerboard Artifacts</a><span>Odena et al., Distill 2016 · el mismo fenómeno en imágenes</span></li>
+        <li><a href="https://arxiv.org/abs/2210.13438">High Fidelity Neural Audio Compression</a><span>Défossez et al., 2022 · EnCodec</span></li>
+      </ul>
+      <ul class="refs">
+        <li><a href="https://github.com/fergarciadlc/pyday26-ai-music-detection/tree/main/examples">Ejemplos de esta charla</a><span>espectrogramas, codec y latentes, detector en PyTorch</span></li>
+        <li><a href="https://github.com/fergarciadlc/aria">ARIA</a> · <a href="https://github.com/fergarciadlc/detector-models">detector-models</a><span>metodología y código de entrenamiento de mi paper</span></li>
+        <li><a href="https://newsroom-deezer.com/2026/07/ai-music-exceeds-50-percent-daily-uploads-deezer/">Deezer: más del 50% de las subidas es IA</a><span>Deezer Newsroom, julio 2026</span></li>
+        <li><a href="https://newsroom-deezer.com/2025/11/deezer-ipsos-survey-ai-music/">Encuesta Deezer / Ipsos</a><span>noviembre 2025</span></li>
+        <li><a href="atlas.html">Audio Atlas</a><span>mapa interactivo de modelos generativos de audio</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Fernando Garcia de la Cruz · <a href="https://fergarciadlc.com">fergarciadlc.com</a> · <a href="https://github.com/fergarciadlc">GitHub</a> · <a href="https://www.linkedin.com/in/fergarciadlc">LinkedIn</a></div>
+    <div class="pyday"><span><img src="assets/brand/pyday-snake.png" alt=""></span>PyDay México 2026</div>
+  </div>
+</footer>
+
+<script src="assets/js/quiz.js"></script>
+<script src="assets/js/fakeprints.js"></script>
+</body>
+</html>

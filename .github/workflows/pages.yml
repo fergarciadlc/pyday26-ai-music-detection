@@ -19,12 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - name: Build
-        run: uv run --python 3.12 mkdocs build --strict
+      # The v2 site is static HTML in web/. Its assets/ and atlas.html are symlinks
+      # into docs/ (shared with the MkDocs version), so copy them as real files.
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp -RL web/. _site/
+          touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _site
 
   deploy:
     needs: build

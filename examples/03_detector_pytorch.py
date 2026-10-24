@@ -104,7 +104,8 @@ model = nn.Sequential(
     conv_block(1, 16), conv_block(16, 32), conv_block(32, 64),
     conv_block(64, 128), conv_block(128, 256), conv_block(256, 512),
     nn.AdaptiveAvgPool2d(1), nn.Flatten(),  # promedio global: un número por canal
-    nn.Linear(512, 1),  # 1 logit: > 0 significa "codec"
+    nn.Linear(512, 128), nn.ReLU(),  # capa densa de 128 unidades
+    nn.Linear(128, 1),  # 1 logit: > 0 significa "codec"
 ).to(device)
 loss_fn = nn.BCEWithLogitsLoss()  # sigmoide + entropía cruzada binaria en un solo paso
 opt = torch.optim.Adam(model.parameters(), lr=1e-3)

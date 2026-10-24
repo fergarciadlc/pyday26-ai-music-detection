@@ -9,60 +9,60 @@
  "history": [
   {
    "epoch": 1,
-   "train_loss": 0.2153,
-   "train_acc": 0.9468,
+   "train_loss": 0.2622,
+   "train_acc": 0.8936,
    "test_acc": 1.0
   },
   {
    "epoch": 2,
-   "train_loss": 0.029,
-   "train_acc": 1.0,
-   "test_acc": 0.9975
+   "train_loss": 0.014,
+   "train_acc": 0.9973,
+   "test_acc": 1.0
   },
   {
    "epoch": 3,
-   "train_loss": 0.0085,
+   "train_loss": 0.0009,
    "train_acc": 1.0,
    "test_acc": 1.0
   },
   {
    "epoch": 4,
-   "train_loss": 0.0052,
+   "train_loss": 0.0005,
    "train_acc": 1.0,
    "test_acc": 1.0
   },
   {
    "epoch": 5,
-   "train_loss": 0.0025,
+   "train_loss": 0.0002,
    "train_acc": 1.0,
    "test_acc": 1.0
   },
   {
    "epoch": 6,
-   "train_loss": 0.0019,
+   "train_loss": 0.0002,
    "train_acc": 1.0,
    "test_acc": 1.0
   },
   {
    "epoch": 7,
-   "train_loss": 0.0012,
-   "train_acc": 1.0,
-   "test_acc": 1.0
+   "train_loss": 0.0038,
+   "train_acc": 0.9973,
+   "test_acc": 0.62
   },
   {
    "epoch": 8,
-   "train_loss": 0.0012,
-   "train_acc": 1.0,
+   "train_loss": 0.0076,
+   "train_acc": 0.9987,
    "test_acc": 1.0
   }
  ],
  "test_window_acc": 1.0,
  "test_track_acc": 1.0,
  "p_codec": {
-  "guitar.mp3 (real)": 0.624,
-  "guitar.mp3 + EnCodec": 1.0,
-  "clip-3.mp3 (IA, Suno)": 0.0028,
-  "clip-4.mp3 (híbrido: guitarra humana + Suno)": 0.2173,
-  "clip-5.mp3 (IA, Suno)": 0.001
+  "guitar.mp3 (real)": 0.0003,
+  "guitar.mp3 + EnCodec": 0.98,
+  "clip-3.mp3 (IA, Suno)": 0.0001,
+  "clip-4.mp3 (híbrido: guitarra humana + Suno)": 0.0001,
+  "clip-5.mp3 (IA, Suno)": 0.0001
  }
 }

@@ -558,8 +558,11 @@
       renderPlay();
       renderAll();
       new ResizeObserver(() => { drawFold(); drawSpectrum(); }).observe(root);
-      new MutationObserver(() => { renderTiles(); drawFold(); drawSpectrum(); })
+      // Redraw on theme changes: MkDocs toggles an attribute, plain pages follow the OS.
+      const retheme = () => { renderTiles(); drawFold(); drawSpectrum(); };
+      new MutationObserver(retheme)
         .observe(document.body, { attributes: true, attributeFilter: ["data-md-color-scheme"] });
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme);
     })
     .catch((err) => {
       root.innerHTML = `<p class="fp-loading">No se pudieron cargar los datos del panel (${err.message}).</p>`;
