@@ -1,0 +1,68 @@
+{
+ "device": "mps",
+ "dataset": {
+  "train_tracks": 94,
+  "train_windows": 752,
+  "test_tracks": 50,
+  "test_windows": 400
+ },
+ "history": [
+  {
+   "epoch": 1,
+   "train_loss": 0.2622,
+   "train_acc": 0.8936,
+   "test_acc": 1.0
+  },
+  {
+   "epoch": 2,
+   "train_loss": 0.014,
+   "train_acc": 0.9973,
+   "test_acc": 1.0
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.0009,
+   "train_acc": 1.0,
+   "test_acc": 1.0
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.0005,
+   "train_acc": 1.0,
+   "test_acc": 1.0
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.0002,
+   "train_acc": 1.0,
+   "test_acc": 1.0
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.0002,
+   "train_acc": 1.0,
+   "test_acc": 1.0
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.0051,
+   "train_acc": 0.9973,
+   "test_acc": 0.575
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.0071,
+   "train_acc": 0.9987,
+   "test_acc": 1.0
+  }
+ ],
+ "test_window_acc": 1.0,
+ "test_track_acc": 1.0,
+ "p_codec": {
+  "guitar.mp3 (real)": 0.9004,
+  "guitar.mp3 + EnCodec": 1.0,
+  "clip-3.mp3 (AI, Suno)": 0.0001,
+  "clip-4.mp3 (hybrid: human guitar + Suno)": 0.0021,
+  "clip-5.mp3 (AI, Suno)": 0.0002
+ }
+}

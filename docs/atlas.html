@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Audio Atlas: lineage space of generative audio models</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F4F5F7; --side:#FFFFFF; --ink:#12151C; --ink2:#5D6474; --ink3:#8C93A2;
+  --line:rgba(10,15,30,.10); --line2:rgba(10,15,30,.18); --well:#EEF0F3; --accent:#D9771A; --ok:#2E9B4B;
+  box-sizing:border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0B0C10; --side:#0F1116; --ink:#E9EBEF; --ink2:#8B92A0; --ink3:#5C6370;
+    --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.14); --well:#161921; --accent:#F59A3C; --ok:#5CC777;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0B0C10; --side:#0F1116; --ink:#E9EBEF; --ink2:#8B92A0; --ink3:#5C6370;
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.14); --well:#161921; --accent:#F59A3C; --ok:#5CC777;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:12.5px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.app{display:grid; grid-template-columns:320px minmax(0,1fr); height:100%; min-height:560px}
+.side{
+  background:var(--side); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0;
+}
+.scrollpane{overflow:auto; flex:1; padding:26px 24px 18px}
+.brand h1{font-family:"JetBrains Mono", monospace; font-size:17px; font-weight:600; letter-spacing:.32em; margin:0}
+.brand .sub{margin:4px 0 0; color:var(--ink2); letter-spacing:.06em}
+.status{display:flex; align-items:center; gap:8px; margin:12px 0 0; color:var(--ink2)}
+.status i{width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok)}
+
+.readout{margin:26px 0 4px; padding-bottom:18px; border-bottom:1px solid var(--line)}
+.rname{display:flex; align-items:center; gap:12px; font-family:"Inter Tight", system-ui, sans-serif; font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1.05; margin:0}
+.rname i{width:14px; height:14px; border-radius:3px; flex:none; background:var(--c, var(--ink3))}
+.rcoord{color:var(--ink2); margin:8px 0 0; letter-spacing:.04em}
+.rcoord b{color:var(--ink); font-weight:500}
+.rorg{margin:10px 0 0; color:var(--ink)}
+.rdesc{margin:12px 0 0; color:var(--ink2); line-height:1.6; font-size:12.5px}
+.rtags{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px}
+.rtags span{border:1px solid var(--line2); border-radius:5px; padding:2px 7px; color:var(--ink2); font-size:11.5px}
+.rlab{margin:16px 0 7px; color:var(--ink3); letter-spacing:.14em; font-size:11px}
+.rels{display:flex; flex-wrap:wrap; gap:6px}
+.rels button{
+  display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line2); background:var(--well);
+  border-radius:6px; padding:4px 9px; cursor:pointer; font-size:12px;
+}
+.rels button i{width:7px; height:7px; border-radius:2px; background:var(--c)}
+.rels button:hover{border-color:var(--ink3)}
+.clear{margin-top:14px; background:none; border:0; padding:0; color:var(--ink3); cursor:pointer; text-decoration:underline; text-underline-offset:3px}
+
+.sec{padding:18px 0; border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec h2{font-size:11px; font-weight:500; letter-spacing:.2em; color:var(--ink3); margin:0 0 14px}
+.ctl{margin-bottom:14px}
+.ctl:last-child{margin-bottom:0}
+.ctl .lbl{display:flex; justify-content:space-between; color:var(--ink2); letter-spacing:.1em; font-size:11.5px; margin-bottom:8px}
+.ctl .lbl b{color:var(--ink); font-weight:500; letter-spacing:0}
+.seg{display:grid; grid-auto-flow:column; grid-auto-columns:1fr; border:1px solid var(--line2); border-radius:8px; overflow:hidden}
+.seg button{height:36px; border:0; background:transparent; cursor:pointer; color:var(--ink2); border-left:1px solid var(--line2)}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--well); color:var(--ink)}
+.hint{color:var(--ink3); margin:8px 0 0; font-size:11.5px; line-height:1.55}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:18px; background:transparent; margin:0; cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{height:1px; background:var(--line2)}
+input[type=range]::-moz-range-track{height:1px; background:var(--line2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:3px; height:18px; margin-top:-9px; background:var(--ink); border-radius:1px}
+input[type=range]::-moz-range-thumb{width:3px; height:18px; background:var(--ink); border:0; border-radius:1px}
+.search{width:100%; height:36px; border:1px solid var(--line2); border-radius:8px; background:var(--well); padding:0 10px}
+.search::placeholder{color:var(--ink3)}
+.checks{display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:12px}
+.checks label{display:inline-flex; align-items:center; gap:8px; cursor:pointer; color:var(--ink2)}
+.checks input{accent-color:var(--accent); width:14px; height:14px}
+
+.rows{display:grid; gap:9px}
+.crow{display:grid; grid-template-columns:10px 1fr auto; gap:4px 10px; align-items:center; border:0; background:none; padding:0; cursor:pointer; text-align:left; color:var(--ink2)}
+.crow i{width:9px; height:9px; border-radius:2px; background:var(--c)}
+.crow b{font-weight:500; color:var(--ink)}
+.crow .bar{grid-column:2 / -1; height:2px; background:var(--line)}
+.crow .bar span{display:block; height:100%; background:var(--c)}
+.crow:hover span.n{color:var(--ink)}
+.flow{display:grid; grid-template-columns:1fr auto; gap:10px; color:var(--ink2); padding:6px 0; border-top:1px solid var(--line)}
+.flow:first-of-type{border-top:0}
+.flow i{display:inline-block; width:7px; height:7px; border-radius:2px; background:var(--c); margin-right:6px}
+.flow b{color:var(--ink); font-weight:500}
+
+.foot{display:flex; align-items:center; gap:14px; padding:16px 24px; border-top:1px solid var(--line)}
+.foot .pos{flex:1; color:var(--ink2)}
+.foot .pos::before{content:""; display:block; height:2px; background:var(--line2); margin-bottom:8px; width:100%}
+.foot .pos span{display:block}
+.play{
+  display:inline-flex; align-items:center; gap:10px; height:46px; padding:0 22px; border-radius:10px; cursor:pointer;
+  border:1.5px solid var(--accent); background:transparent; font-family:"Inter Tight", system-ui, sans-serif; font-size:16px; font-weight:600;
+}
+.play svg{width:12px; height:12px; fill:var(--accent)}
+.play:hover{background:color-mix(in oklab, var(--accent) 12%, transparent)}
+
+.stage{position:relative; min-width:0; min-height:0; overflow:hidden; touch-action:none}
+canvas{display:block; width:100%; height:100%; cursor:grab}
+canvas.hand{cursor:pointer}
+canvas:active{cursor:grabbing}
+.legend{position:absolute; top:calc(84px); right:22px; display:grid; gap:7px; justify-items:end; pointer-events:auto}
+.legend button{display:flex; align-items:center; gap:10px; border:0; background:none; cursor:pointer; color:var(--ink2); padding:0; font-size:12px}
+.legend button i{width:10px; height:10px; border-radius:2px; background:var(--c)}
+.legend button:hover{color:var(--ink)}
+.gradbar{display:grid; grid-template-columns:auto 6px; gap:10px; height:min(46vh, 380px); align-items:stretch}
+.gradbar .ticks{display:flex; flex-direction:column; justify-content:space-between; text-align:right; color:var(--ink2); font-size:11px}
+.gradbar .bar{border-radius:3px}
+.tools{position:absolute; top:22px; right:22px; display:flex; gap:8px}
+.tbtn{height:40px; min-width:40px; padding:0 12px; border-radius:9px; border:1px solid var(--line2); background:color-mix(in oklab, var(--side) 85%, transparent); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ink2); backdrop-filter:blur(6px)}
+.tbtn:hover{color:var(--ink)}
+.tbtn svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.6}
+.cornerhint{position:absolute; left:22px; bottom:18px; color:var(--ink3); font-size:11.5px; pointer-events:none}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr; grid-template-rows:auto auto; height:auto}
+  .stage{order:-1; height:68vh; min-height:440px; border-bottom:1px solid var(--line)}
+  .side{border-right:0}
+  .scrollpane{overflow:visible; padding:22px 18px 10px}
+  .foot{position:sticky; bottom:0; background:var(--side); padding:12px 18px calc(12px + env(safe-area-inset-bottom, 0px))}
+  .legend{top:74px; right:14px}
+  .tools{top:14px; right:14px}
+  .gradbar{height:180px}
+  .legend button{display:none}
+  .cornerhint{display:none}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="scrollpane">
+      <div class="brand">
+        <h1>AUDIO ATLAS</h1>
+        <p class="sub">lineage space of generative audio</p>
+        <p class="status"><i></i><span id="status">loading</span></p>
+        <p class="hint" style="margin-top:10px">same data as the <a href="https://claude.ai/artifact/8Ujno97JGbgH2bfWAzHfmj" style="color:var(--ink2)">timeline view</a></p>
+      </div>
+
+      <div class="readout" id="readout" aria-live="polite"></div>
+
+      <div class="sec">
+        <h2>MAP</h2>
+        <div class="ctl">
+          <div class="lbl">CLUSTER BY</div>
+          <div class="seg" role="group" aria-label="Cluster by">
+            <button data-mode="arch" aria-pressed="true">arch</button>
+            <button data-mode="field" aria-pressed="false">field</button>
+            <button data-mode="open" aria-pressed="false">openness</button>
+          </div>
+          <p class="hint" id="modeHint"></p>
+        </div>
+        <div class="ctl">
+          <div class="lbl">COLOR BY</div>
+          <div class="seg" role="group" aria-label="Color by">
+            <button data-color="cluster" aria-pressed="true">cluster</button>
+            <button data-color="year" aria-pressed="false">year</button>
+          </div>
+        </div>
+        <div class="ctl">
+          <div class="lbl">SPREAD <b id="spreadV">50</b></div>
+          <input type="range" id="spread" min="0" max="100" value="50" aria-label="Cluster spread">
+        </div>
+        <div class="ctl">
+          <div class="lbl">HALO <b id="haloV">60</b></div>
+          <input type="range" id="halo" min="0" max="100" value="60" aria-label="Point cloud density">
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>FILTER</h2>
+        <input class="search" id="q" type="search" placeholder="find a model or lab" aria-label="Find a model or lab">
+        <div class="checks">
+          <label><input type="checkbox" id="labels"> all labels</label>
+          <label><input type="checkbox" id="events"> industry events</label>
+        </div>
+      </div>
+
+      <div class="sec" id="stats"></div>
+    </div>
+    <div class="foot">
+      <div class="pos"><span id="tourPos">— / —</span></div>
+      <button class="play" id="tour"><svg viewBox="0 0 12 12" id="tourIcon"><path d="M2 1l9 5-9 5z"/></svg><span id="tourLabel">Tour</span></button>
+    </div>
+  </aside>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" role="img" aria-label="Embedding-style map of generative audio models clustered by group, with lineage links"></canvas>
+    <div class="tools">
+      <button class="tbtn" id="fit" aria-label="Reset view" title="Reset view"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg></button>
+      <button class="tbtn" id="theme" aria-label="Toggle light and dark" title="Toggle theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9L13 13M3 13l1.1-1.1M11.9 4.1L13 3"/></svg></button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="cornerhint">drag points, scroll to zoom, click for details</div>
+  </div>
+</div>
+
+<script>
+const TRACKS = [
+  {id:"speech", name:"Speech & voice"},
+  {id:"music",  name:"Music & songs"},
+  {id:"inst",   name:"Instruments & producer tools"},
+  {id:"sfx",    name:"Sound effects & Foley"},
+  {id:"found",  name:"Codecs & foundations"},
+  {id:"law",    name:"Industry & law"}
+];
+const ARCH = {
+  ar:"Autoregressive", gan:"GAN", vae:"VAE & autoencoder", diff:"Diffusion & flow matching",
+  lm:"Token language model", other:"Other architecture", closed:"Undisclosed", event:"Industry event"
+};
+const WTS = {open:"Open weights", closed:"Closed product", paper:"Paper only, no official weights", unclear:"Weights status unclear"};
+const ERAS = [
+  [2016,2020,"Vocoders and first sounds"],[2020,2023,"Raw audio, codecs and tokens"],
+  [2023,2024,"Text-to-audio explosion"],[2024,2025,"Songs go mainstream"],
+  [2025,2026,"Open models and settlements"],[2026,2027,"The licensed era"]
+];
+
+const D = [
+/* ---------- Codecs & foundations ---------- */
+{id:"vqvae",n:"VQ-VAE",d:"2017-11",t:"found",a:"vae",o:"DeepMind",w:"paper",x:"Learned discrete codes for images and audio. Its quantized latents reappear in Jukebox and in every neural codec that followed."},
+{id:"soundstream",n:"SoundStream",d:"2021-07",t:"found",a:"vae",o:"Google",w:"paper",l:["vqvae"],x:"End-to-end neural codec that turns audio into stacks of discrete tokens with residual vector quantization. The building block for AudioLM and MusicLM."},
+{id:"clap",n:"CLAP",d:"2022-06",t:"found",a:"other",o:"Microsoft, later LAION",w:"open",x:"Contrastive model that puts audio and text in a shared embedding space. Used to condition generators and to score how well audio matches a prompt."},
+{id:"audiolm",n:"AudioLM",d:"2022-09",t:"found",a:"lm",o:"Google",w:"paper",l:["soundstream"],x:"Showed audio can be modeled like language: semantic tokens for long-term structure, codec tokens for detail. Produced coherent speech and piano continuations."},
+{id:"encodec",n:"EnCodec",d:"2022-10",t:"found",a:"vae",o:"Meta",w:"open",l:["soundstream"],x:"Meta's open neural codec. Became the tokenizer behind MusicGen, AudioGen and VALL-E."},
+{id:"dac",n:"DAC",d:"2023-06",t:"found",a:"vae",o:"Descript",w:"open",l:["encodec"],x:"Descript Audio Codec: high-fidelity 44.1 kHz compression, widely reused as the tokenizer for later generators."},
+{id:"mimi",n:"Mimi",d:"2024-09",t:"found",a:"vae",o:"Kyutai",w:"open",l:["soundstream"],x:"Streaming codec that packs semantic and acoustic information into low-bitrate tokens, built for real-time conversation in Moshi."},
+
+/* ---------- Speech & voice ---------- */
+{id:"wavenet",n:"WaveNet",d:"2016-09",t:"speech",a:"ar",o:"DeepMind",w:"paper",x:"Generated raw audio one sample at a time with dilated convolutions. The first neural model whose speech sounded genuinely natural, and the starting gun for the field."},
+{id:"tacotron",n:"Tacotron",d:"2017-03",t:"speech",a:"ar",o:"Google",w:"paper",x:"End-to-end text-to-spectrogram model with attention, replacing hand-built TTS pipelines."},
+{id:"tacotron2",n:"Tacotron 2",d:"2017-12",t:"speech",a:"ar",o:"Google",w:"paper",l:["tacotron","wavenet"],x:"Tacotron plus a WaveNet vocoder. Reached near-human ratings and set the two-stage template, acoustic model plus vocoder, for years."},
+{id:"wavernn",n:"WaveRNN",d:"2018-02",t:"speech",a:"ar",o:"DeepMind",w:"paper",l:["wavenet"],x:"A compact recurrent vocoder fast enough to run on mobile devices."},
+{id:"waveglow",n:"WaveGlow",d:"2018-11",t:"speech",a:"other",o:"NVIDIA",w:"open",l:["wavenet"],x:"Normalizing-flow vocoder that generated audio in parallel, far faster than WaveNet."},
+{id:"fastspeech",n:"FastSpeech 1 & 2",d:"2019-05",t:"speech",a:"other",o:"Microsoft",w:"paper",l:["tacotron2"],x:"Non-autoregressive TTS: predict durations, then generate every frame at once. Much faster and more robust than attention-based models."},
+{id:"melgan",n:"MelGAN",d:"2019-10",t:"speech",a:"gan",o:"Lyrebird & Mila",w:"open",x:"Showed a lightweight GAN could be a high-quality vocoder, opening the GAN-vocoder era."},
+{id:"diffwave",n:"DiffWave & WaveGrad",d:"2020-09",t:"speech",a:"diff",o:"NVIDIA, Baidu & Google",w:"open",x:"The first diffusion models for waveform generation, published within days of each other."},
+{id:"hifigan",n:"HiFi-GAN",d:"2020-10",t:"speech",a:"gan",o:"Kakao Enterprise",w:"open",l:["melgan"],x:"Fast, high-fidelity GAN vocoder that became the default in open TTS projects."},
+{id:"diffsinger",n:"DiffSinger",d:"2021-05",t:"speech",a:"diff",o:"Zhejiang University",w:"open",x:"Diffusion-based singing voice synthesis, and the backbone of many open singing-voice tools."},
+{id:"vits",n:"VITS",d:"2021-06",t:"speech",a:"vae",o:"Kakao Enterprise",w:"open",l:["hifigan"],x:"End-to-end TTS combining a VAE, normalizing flows and a GAN decoder. Its architecture underlies YourTTS and the voice-conversion tools behind AI covers."},
+{id:"yourtts",n:"YourTTS",d:"2021-12",t:"speech",a:"vae",o:"Coqui",w:"open",l:["vits"],x:"Zero-shot multilingual voice cloning from a few seconds of audio, fully open."},
+{id:"valle",n:"VALL-E",d:"2023-01",t:"speech",a:"lm",o:"Microsoft",w:"paper",l:["encodec"],x:"Treated TTS as language modeling over EnCodec tokens and cloned a voice from a three-second prompt."},
+{id:"eleven",n:"ElevenLabs TTS",d:"2023-01",t:"speech",a:"closed",o:"ElevenLabs",w:"closed",x:"Commercial voice cloning and TTS that made synthetic voices mainstream for creators, audiobooks and dubbing."},
+{id:"rvc",n:"So-VITS-SVC & RVC",d:"2023-03",t:"speech",a:"vae",o:"Open-source community",w:"open",l:["vits"],x:"Voice-conversion tools that fueled the viral wave of AI song covers in 2023."},
+{id:"bark",n:"Bark",d:"2023-04",t:"speech",a:"lm",o:"Suno",w:"open",l:["audiolm"],x:"Open GPT-style text-to-audio model that could laugh, sing and drop in sound effects mid-sentence."},
+{id:"ns2",n:"NaturalSpeech 2",d:"2023-04",t:"speech",a:"diff",o:"Microsoft",w:"paper",x:"Latent diffusion TTS with zero-shot speech and singing. NaturalSpeech 3 followed in 2024."},
+{id:"voicebox",n:"Voicebox",d:"2023-06",t:"speech",a:"diff",o:"Meta",w:"paper",x:"Flow-matching speech model that handled TTS, editing and denoising by in-filling audio. Weights withheld over misuse concerns."},
+{id:"xtts",n:"XTTS",d:"2023-09",t:"speech",a:"lm",o:"Coqui",w:"open",l:["yourtts"],x:"Popular open multilingual voice cloner that needs about six seconds of reference audio."},
+{id:"gpt4o",n:"GPT-4o voice",d:"2024-05",t:"speech",a:"closed",o:"OpenAI",w:"closed",x:"Native speech-to-speech in a general model: audio in, audio out, with tone and interruptions, no separate TTS step."},
+{id:"seedtts",n:"Seed-TTS",d:"2024-06",t:"speech",a:"lm",o:"ByteDance",w:"paper",x:"Highly natural zero-shot TTS, one of the first rated close to human recordings."},
+{id:"cosyvoice",n:"CosyVoice",d:"2024-07",t:"speech",a:"lm",o:"Alibaba",w:"open",x:"Open multilingual TTS pairing a token language model with a flow-matching decoder."},
+{id:"moshi",n:"Moshi",d:"2024-09",t:"speech",a:"lm",o:"Kyutai",w:"open",l:["mimi"],x:"Open full-duplex voice model that listens and speaks at the same time, in real time."},
+{id:"f5tts",n:"F5-TTS",d:"2024-10",t:"speech",a:"diff",o:"Shanghai Jiao Tong University & partners",w:"open",x:"A simple flow-matching TTS with strong zero-shot voice cloning."},
+{id:"kokoro",n:"Kokoro",d:"2024-12",t:"speech",a:"other",o:"hexgrad",w:"open",x:"Only 82 million parameters, yet among the best-sounding open TTS models. Runs on modest hardware."},
+{id:"csm",n:"Sesame CSM",d:"2025-03",t:"speech",a:"lm",o:"Sesame",w:"open",x:"Conversational Speech Model whose demo went viral for natural pauses, breaths and emotional timing."},
+{id:"orpheus",n:"Orpheus",d:"2025-03",t:"speech",a:"lm",o:"Canopy Labs",w:"open",x:"Llama-based TTS known for its emotional range and expressive tags."},
+{id:"dia",n:"Dia",d:"2025-04",t:"speech",a:"lm",o:"Nari Labs",w:"open",x:"Generates multi-speaker dialogue in one pass, including laughs and other nonverbal sounds."},
+{id:"chatterbox",n:"Chatterbox",d:"2025-05",t:"speech",a:"lm",o:"Resemble AI",w:"open",x:"MIT-licensed voice cloning from short reference audio, with emotion control."},
+{id:"sunospeech",n:"Suno Speech (beta)",d:"2026-10",t:"speech",a:"closed",o:"Suno",w:"closed",l:["sunov6"],x:"A model Suno describes as the first to generate voice and music together as one track: spoken audio over original background music."},
+
+/* ---------- Music & songs ---------- */
+{id:"musegan",n:"MuseGAN",d:"2017-09",t:"music",a:"gan",o:"Academia Sinica",w:"open",s:1,x:"Multi-track symbolic music with GANs: drums, bass, guitar and more generated together."},
+{id:"musicvae",n:"MusicVAE",d:"2018-03",t:"music",a:"vae",o:"Google Magenta",w:"open",s:1,x:"A latent space for melodies and drum loops that you could smoothly interpolate through."},
+{id:"musictransformer",n:"Music Transformer",d:"2018-09",t:"music",a:"ar",o:"Google Magenta",w:"open",s:1,x:"Relative attention let a transformer hold musical structure over minutes of piano MIDI."},
+{id:"coconet",n:"Coconet Bach Doodle",d:"2019-03",t:"music",a:"other",o:"Google Magenta",w:"open",s:1,x:"Harmonized your melody in the style of Bach, powering the first AI-based Google Doodle."},
+{id:"musenet",n:"MuseNet",d:"2019-04",t:"music",a:"ar",o:"OpenAI",w:"closed",s:1,l:["musictransformer"],x:"Large transformer composing multi-instrument MIDI across styles, from Mozart to pop."},
+{id:"jukebox",n:"Jukebox",d:"2020-04",t:"music",a:"lm",o:"OpenAI",w:"open",l:["vqvae"],x:"The first model to generate raw-audio songs with singing in artist styles. Slow and lo-fi, but a landmark."},
+{id:"riffusion",n:"Riffusion",d:"2022-12",t:"music",a:"diff",o:"Riffusion",w:"open",x:"Fine-tuned Stable Diffusion on spectrogram images to generate music loops."},
+{id:"musiclm",n:"MusicLM",d:"2023-01",t:"music",a:"lm",o:"Google",w:"paper",l:["audiolm"],x:"Text-to-music via hierarchical token modeling on top of AudioLM. Released only as a limited test app."},
+{id:"mousai",n:"Moûsai",d:"2023-01",t:"music",a:"diff",o:"ETH Zürich & partners",w:"open",x:"Long-context latent diffusion for text-to-music at 48 kHz."},
+{id:"noise2music",n:"Noise2Music",d:"2023-02",t:"music",a:"diff",o:"Google",w:"paper",x:"Cascaded diffusion models for text-to-music."},
+{id:"musicgen",n:"MusicGen",d:"2023-06",t:"music",a:"lm",o:"Meta",w:"open",l:["encodec"],x:"Single-stage transformer over EnCodec tokens, released in AudioCraft. The go-to open text-to-music model for years."},
+{id:"stableaudio",n:"Stable Audio",d:"2023-09",t:"music",a:"diff",o:"Stability AI",w:"closed",x:"Latent diffusion with timing conditioning, so you could ask for a specific length. A commercial launch for music."},
+{id:"lyria",n:"Lyria",d:"2023-11",t:"music",a:"closed",o:"Google DeepMind",w:"closed",x:"DeepMind's music model, launched alongside YouTube's Dream Track experiment."},
+{id:"sunov1",n:"Suno launch",d:"2023-12",t:"music",a:"closed",o:"Suno",w:"closed",l:["bark"],x:"Full songs with lyrics and vocals from a prompt, opened to the public with a Microsoft Copilot integration."},
+{id:"sunov3",n:"Suno v3",d:"2024-03",t:"music",a:"closed",o:"Suno",w:"closed",l:["sunov1"],x:"Radio-plausible songs of around two minutes. The moment AI songs went viral."},
+{id:"udio",n:"Udio",d:"2024-04",t:"music",a:"closed",o:"Udio",w:"closed",x:"Launched with unusually realistic vocals and production, becoming Suno's main rival."},
+{id:"stableaudio2",n:"Stable Audio 2",d:"2024-04",t:"music",a:"diff",o:"Stability AI",w:"closed",l:["stableaudio"],x:"Full three-minute tracks and audio-to-audio transformation."},
+{id:"sao",n:"Stable Audio Open",d:"2024-06",t:"music",a:"diff",o:"Stability AI",w:"open",l:["stableaudio"],x:"Open weights trained on Creative Commons and Freesound audio. Strong for sound design and short samples."},
+{id:"jasco",n:"JASCO",d:"2024-06",t:"music",a:"diff",o:"Meta",w:"open",l:["musicgen"],x:"Text-to-music with chord, melody and drum controls, built on flow matching."},
+{id:"sunov4",n:"Suno v4",d:"2024-11",t:"music",a:"closed",o:"Suno",w:"closed",l:["sunov3"],x:"Cleaner audio, sharper lyrics and stronger song structure."},
+{id:"yue",n:"YuE",d:"2025-01",t:"music",a:"lm",o:"HKUST & M-A-P",w:"open",x:"Open foundation model for full songs with lyrics, one of the first to approach closed systems."},
+{id:"acestep",n:"ACE-Step",d:"2025-05",t:"music",a:"diff",o:"ACE Studio & StepFun",w:"open",x:"Fast open song generator with lyric conditioning, built on diffusion over a compressed audio autoencoder."},
+{id:"sunov45",n:"Suno v4.5",d:"2025-05",t:"music",a:"closed",o:"Suno",w:"closed",l:["sunov4"],x:"Longer songs, better genre blending and more expressive vocals."},
+{id:"elevenmusic",n:"Eleven Music",d:"2025-08",t:"music",a:"closed",o:"ElevenLabs",w:"closed",x:"Text-to-song model launched with label and publisher licensing in place for commercial use."},
+{id:"sunov5",n:"Suno v5 & Studio",d:"2025-09",t:"music",a:"closed",o:"Suno",w:"closed",l:["sunov45"],x:"Suno's top model of 2025, released alongside Suno Studio, a generative DAW."},
+{id:"lyria3",n:"Lyria 3",d:"2026-02",t:"music",a:"closed",o:"Google DeepMind",w:"closed",l:["lyria"],x:"Built into Gemini. Takes text, photos or video as prompts and writes its own lyrics. Makes 30-second tracks carrying SynthID watermarks."},
+{id:"lyria3pro",n:"Lyria 3 Pro",d:"2026-03",t:"music",a:"closed",o:"Google DeepMind",w:"closed",l:["lyria3"],x:"Songs up to about three minutes with control over intros, verses, choruses and transitions. Available in Gemini and through the API."},
+{id:"sunov55",n:"Suno v5.5",d:"2026-03",t:"music",a:"closed",o:"Suno",w:"closed",l:["sunov5"],x:"The last of Suno's original-generation models, released March 26, 2026."},
+{id:"acestepxl",n:"ACE-Step XL",d:"2026-04",t:"music",a:"diff",o:"ACE Studio & StepFun",w:"open",l:["acestep"],x:"A larger 4-billion-parameter open release for full lyric-conditioned songs."},
+{id:"sunov6",n:"Suno v6 family",d:"2026-09",t:"music",a:"closed",o:"Suno",w:"closed",l:["sunov55"],x:"Three models, v6, v6-wild and v6-mini, trained on music licensed from Warner, BMG and Believe. Suno retired every earlier model the same day and added watermarking."},
+{id:"yue2",n:"YuE2",d:"2026-09",t:"music",a:"lm",o:"Tokenwave.AI, NYU, Stanford & partners",w:"unclear",l:["yue"],x:"Composes a readable score first, then performs it as audio. The score enables controlled editing, covers and agent-driven revisions."},
+
+/* ---------- Instruments & producer tools ---------- */
+{id:"nsynth",n:"NSynth",d:"2017-04",t:"inst",a:"ar",o:"Google Magenta",w:"open",l:["wavenet"],x:"A WaveNet autoencoder that learned instrument timbres, so you could blend a flute with a bass."},
+{id:"gansynth",n:"GANSynth",d:"2019-02",t:"inst",a:"gan",o:"Google Magenta",w:"open",l:["nsynth"],x:"Generated instrument notes with GANs, thousands of times faster than NSynth."},
+{id:"ddsp",n:"DDSP",d:"2020-01",t:"inst",a:"other",o:"Google Magenta",w:"open",x:"Neural networks driving classic oscillators and filters. Tiny, interpretable and great for timbre transfer."},
+{id:"drumgan",n:"DrumGAN",d:"2020-08",t:"inst",a:"gan",o:"Sony CSL Paris",w:"paper",l:["gansynth"],x:"Drum one-shots steered by perceptual knobs like brightness, warmth and boominess. Shipped inside Steinberg's Backbone drum sampler."},
+{id:"rave",n:"RAVE",d:"2021-11",t:"inst",a:"vae",o:"IRCAM",w:"open",x:"A VAE that synthesizes 48 kHz audio faster than real time on a laptop CPU. Became a live instrument through nn~ in Max and Pure Data."},
+{id:"neutone",n:"Neutone",d:"2022",p:"y",t:"inst",a:"other",o:"Qosmo",w:"open",l:["rave","ddsp"],x:"A plugin platform for running neural models like RAVE and DDSP inside a DAW."},
+{id:"diffariff",n:"Diff-A-Riff",d:"2024-06",t:"inst",a:"diff",o:"Sony CSL Paris",w:"paper",l:["drumgan","clap"],x:"Generates a single instrumental part that fits an existing mix, steered by audio references or text."},
+{id:"lyriart",n:"Lyria RealTime",d:"2025-05",t:"inst",a:"closed",o:"Google DeepMind",w:"closed",l:["lyria"],x:"Interactive music generation you steer live while it plays."},
+{id:"magentart",n:"Magenta RealTime",d:"2025-06",t:"inst",a:"lm",o:"Google Magenta",w:"open",x:"Open-weights model for continuous, live music generation."},
+
+/* ---------- Sound effects & Foley ---------- */
+{id:"wavegan",n:"WaveGAN",d:"2018-02",t:"sfx",a:"gan",o:"UC San Diego",w:"open",x:"The first GAN to generate raw audio: drums, birdsong and spoken digits."},
+{id:"specvqgan",n:"SpecVQGAN",d:"2021-10",t:"sfx",a:"lm",o:"Tampere University",w:"open",x:"An early open-domain model generating sound for silent video."},
+{id:"audiogen",n:"AudioGen",d:"2022-09",t:"sfx",a:"lm",o:"Meta",w:"open",x:"Text-to-sound effects with a transformer over discrete audio tokens."},
+{id:"audioldm",n:"AudioLDM",d:"2023-01",t:"sfx",a:"diff",o:"University of Surrey",w:"open",l:["clap"],x:"Latent diffusion conditioned on CLAP, bringing image-generation techniques to sound effects and music."},
+{id:"makeanaudio",n:"Make-An-Audio",d:"2023-01",t:"sfx",a:"diff",o:"Zhejiang University & ByteDance",w:"paper",x:"Text-to-audio diffusion trained with pseudo prompts to work around scarce captioned data."},
+{id:"tango",n:"Tango",d:"2023-04",t:"sfx",a:"diff",o:"SUTD",w:"open",l:["audioldm"],x:"Text-to-audio diffusion using an instruction-tuned language model as the text encoder."},
+{id:"difffoley",n:"Diff-Foley",d:"2023-06",t:"sfx",a:"diff",o:"Tsinghua University",w:"open",x:"Video-to-audio latent diffusion with contrastive audio-visual pretraining for tighter sync."},
+{id:"foleygen",n:"FoleyGen",d:"2023-09",t:"sfx",a:"lm",o:"Meta",w:"paper",l:["encodec"],x:"Video-to-audio as language modeling: one transformer predicting codec tokens from visual features."},
+{id:"elevensfx",n:"ElevenLabs SFX",d:"2024-05",t:"sfx",a:"closed",o:"ElevenLabs",w:"closed",x:"Commercial text-to-sound-effects for video and game creators."},
+{id:"foleycrafter",n:"FoleyCrafter",d:"2024-07",t:"sfx",a:"diff",o:"Shanghai AI Lab",w:"open",x:"Adds visual adapters and onset-based timing control to a pretrained text-to-audio model."},
+{id:"mmaudio",n:"MMAudio",d:"2024-12",t:"sfx",a:"diff",o:"UIUC & Sony AI",w:"open",l:["difffoley"],x:"Jointly trained on video-audio and text-audio data. Best overall on the FoleyBench benchmark."},
+{id:"veo3",n:"Veo 3",d:"2025-05",t:"sfx",a:"closed",o:"Google DeepMind",w:"closed",x:"A video model that generates synchronized dialogue, effects and ambience in the same pass. Joint audio-video generation goes mainstream."},
+{id:"thinksound",n:"ThinkSound",d:"2025-06",t:"sfx",a:"diff",o:"Alibaba",w:"open",l:["mmaudio"],x:"Adds chain-of-thought reasoning, object-focused refinement and language-guided editing to Foley generation."},
+{id:"hunyuanfoley",n:"HunyuanVideo-Foley",d:"2025-08",t:"sfx",a:"diff",o:"Tencent",w:"open",l:["mmaudio"],x:"Multimodal diffusion with representation alignment for high-fidelity Foley."},
+{id:"sora2",n:"Sora 2",d:"2025-09",t:"sfx",a:"closed",o:"OpenAI",w:"closed",l:["veo3"],x:"OpenAI's video model with natively generated, synchronized speech and sound."},
+
+/* ---------- Industry & law ---------- */
+{id:"heart",n:"“Heart on My Sleeve”",d:"2023-04",t:"law",a:"event",o:"Anonymous creator",w:"closed",l:["rvc"],x:"A viral fake Drake and The Weeknd track made with voice conversion, pulled from streaming services. The industry's wake-up call."},
+{id:"riaa",n:"Labels sue Suno and Udio",d:"2024-06",t:"law",a:"event",o:"RIAA & major labels",w:"closed",x:"The major labels filed copyright suits against both companies over their training data."},
+{id:"umgudio",n:"UMG settles with Udio",d:"2025-10",t:"law",a:"event",o:"Universal Music Group & Udio",w:"closed",l:["riaa"],x:"A settlement plus a deal for a licensed, walled-garden platform. Udio disabled downloads during the transition."},
+{id:"wmgsuno",n:"Warner settles with Suno",d:"2025-11",t:"law",a:"event",o:"Warner Music Group & Suno",w:"closed",l:["riaa"],x:"A settlement and licensing deal. Suno committed to launching licensed models in 2026."},
+{id:"bmgsuno",n:"BMG licenses Suno",d:"2026-08",t:"law",a:"event",o:"BMG & Suno",w:"closed",x:"A global licensing deal covering recordings and publishing, with artist opt-in. Licensed data later fed Suno v6."}
+];
+
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const byId = {};
+D.forEach(it => {
+  const [y,m] = it.d.split("-").map(Number);
+  it.yr = y; it.m = m || 7; it.t0 = y + (it.m-1)/12; it.l = it.l || [];
+  byId[it.id] = it;
+});
+D.forEach(it => { it.kids = D.filter(o => o.l.includes(it.id)).map(o => o.id); it.deg = it.l.length + it.kids.length; });
+const fmtDate = it => it.p === "y" ? String(it.yr) : `${MONTHS[it.m-1]} ${it.yr}`;
+
+/* ---------- palettes ---------- */
+const PAL = {
+  dark:{bg:"#0B0C10", grid:"rgba(255,255,255,0.045)", axis:"rgba(255,255,255,0.30)", ink:"#E9EBEF", ink2:"#8B92A0",
+    edge:"255,255,255", pill:"rgba(14,16,22,0.86)", pillB:"rgba(255,255,255,0.16)", blend:"lighter", halo:0.30, glow:true,
+    blue:"#5B8DEF", orange:"#F59A3C", green:"#5CC777", red:"#E5534B", purple:"#A77BEF", teal:"#3CC8C0", sand:"#D9B26B", grey:"#8A93A6", white:"#DADDE3",
+    years:["#3B4CE0","#8E3FD0","#E0453A","#F2A33A","#9BE07A","#E6F7DF"]},
+  light:{bg:"#F4F5F7", grid:"rgba(10,15,30,0.055)", axis:"rgba(10,15,30,0.40)", ink:"#12151C", ink2:"#5D6474",
+    edge:"20,25,40", pill:"rgba(255,255,255,0.92)", pillB:"rgba(10,15,30,0.16)", blend:"source-over", halo:0.38, glow:false,
+    blue:"#2F66D8", orange:"#D9771A", green:"#2E9B4B", red:"#CF3A33", purple:"#7C4FD6", teal:"#14958E", sand:"#A7802F", grey:"#6B7384", white:"#3A404C",
+    years:["#2E3FC9","#7A2DBF","#C93A30","#D98A1E","#4E9E2E","#1F7A55"]}
+};
+const MAPC = {
+  arch:{lm:"green", diff:"blue", vae:"purple", gan:"red", ar:"orange", other:"sand", closed:"grey", event:"white"},
+  field:{speech:"blue", music:"red", inst:"orange", sfx:"teal", found:"purple", law:"white"},
+  open:{open:"green", paper:"orange", closed:"grey", unclear:"sand", event:"white"}
+};
+const ORDER = { arch:["lm","diff","vae","gan","ar","other","closed","event"], field:TRACKS.map(t=>t.id), open:["open","paper","closed","unclear","event"] };
+const SHORT = {
+  arch:{lm:"token lm", diff:"diffusion", vae:"vae / codec", gan:"gan", ar:"autoregressive", other:"other", closed:"undisclosed", event:"industry"},
+  field:{speech:"speech", music:"music", inst:"instruments", sfx:"sfx / foley", found:"foundations", law:"industry"},
+  open:{open:"open weights", paper:"paper only", closed:"closed", unclear:"unclear", event:"industry"}
+};
+const HINTS = {
+  arch:"groups models by how they generate sound. Links that cross clusters show ideas moving between families.",
+  field:"groups models by what they make: speech, songs, instruments, effects, or the codecs underneath.",
+  open:"groups models by how much was released, from open weights to closed products."
+};
+
+/* ---------- state ---------- */
+const S = { mode:"arch", color:"cluster", sel:null, hover:null, q:"", allLabels:false, events:false, spread:.5, halo:.6, touring:false, timer:null };
+const $ = id => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mq = matchMedia("(prefers-color-scheme: dark)");
+const themeName = () => document.documentElement.dataset.theme || (mq.matches ? "dark" : "light");
+let P = PAL[themeName()];
+let yearScale;
+function refreshPalette(){
+  P = PAL[themeName()];
+  yearScale = d3.scaleSequential(d3.interpolateRgbBasis(P.years)).domain([2016, 2026.9]);
+}
+refreshPalette();
+
+const keyOf = n => S.mode === "arch" ? n.a : S.mode === "field" ? n.t : (n.a === "event" ? "event" : n.w);
+const groupCol = k => P[MAPC[S.mode][k]];
+const colOf = n => S.color === "year" ? yearScale(n.t0) : groupCol(n.key);
+const rOf = n => 3.2 + Math.sqrt(n.deg) * 2.3;
+
+/* ---------- seeded particles ---------- */
+function rng(seed){ let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hash(s){ let h = 2166136261; for(const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h; }
+D.forEach(it => {
+  const r = rng(hash(it.id)), n = 70 + it.deg * 16, pts = [];
+  for(let i=0;i<n;i++){
+    const u = Math.max(1e-6, r()), v = r();
+    const g = Math.sqrt(-2*Math.log(u));
+    const stretch = 0.6 + r()*0.9;
+    pts.push([g*Math.cos(2*Math.PI*v)*stretch, g*Math.sin(2*Math.PI*v), 0.5 + r()*1.1, r()]);
+  }
+  it.pts = pts;
+});
+
+/* ---------- canvas & sim ---------- */
+const stage = $("stage"), cv = $("cv"), ctx = cv.getContext("2d");
+let W = 800, H = 600, VW = 900, VH = 700, DPR = 1, T = d3.zoomIdentity, base = d3.zoomIdentity;
+let nodes = [], links = [], groups = [], centers = {};
+const UNIT = 80;
+
+const sim = d3.forceSimulation()
+  .force("link", d3.forceLink().id(d => d.id).distance(42).strength(0.03))
+  .force("charge", d3.forceManyBody().strength(-22).distanceMax(130))
+  .force("x", d3.forceX().strength(0.16))
+  .force("y", d3.forceY().strength(0.16))
+  .force("collide", d3.forceCollide(d => rOf(d) + 5).iterations(2))
+  .alphaDecay(0.025);
+
+const zoom = d3.zoom().scaleExtent([0.3, 5]).on("zoom", e => { T = e.transform; if(e.sourceEvent) stopTour(); });
+
+function size(){
+  const r = stage.getBoundingClientRect();
+  W = r.width; H = r.height; DPR = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * DPR; cv.height = H * DPR;
+  if(W < 700){ VW = Math.max(W, 560); VH = Math.max(H, 860); } else { VW = Math.max(W, 900); VH = Math.max(H, 680); }
+  const k = Math.min(W / VW, H / VH) * 0.98;
+  base = d3.zoomIdentity.translate((W - VW*k)/2, (H - VH*k)/2).scale(k);
+  d3.select(cv).call(zoom.transform, base);
+}
+
+function computeCenters(){
+  const present = ORDER[S.mode].filter(k => nodes.some(n => n.key === k));
+  groups = present.map(k => ({key:k}));
+  const n = groups.length, portrait = VH > VW, f = 0.62 + S.spread * 0.6;
+  const rx = VW * (portrait ? .27 : .31) * f, ry = VH * (portrait ? .32 : .29) * f;
+  centers = {};
+  groups.forEach((g,i) => {
+    const a = (i/n) * Math.PI*2 - Math.PI/2 + (n % 2 ? 0 : Math.PI/n);
+    centers[g.key] = {x: VW/2 + Math.cos(a)*rx, y: VH/2 + Math.sin(a)*ry};
+  });
+}
+
+function build(restart = true){
+  const prev = new Map(nodes.map(n => [n.id, n]));
+  nodes = D.filter(it => S.events || it.a !== "event").map(it => Object.assign(prev.get(it.id) || {...it, desc: it.x, x: undefined, y: undefined}, {key:keyOf(it)}));
+  const ids = new Set(nodes.map(n => n.id));
+  links = [];
+  nodes.forEach(n => n.l.forEach(pid => { if(ids.has(pid)) links.push({source:pid, target:n.id}); }));
+  computeCenters();
+  nodes.forEach(n => { if(n.x == null || !isFinite(n.x)){ const c = centers[n.key]; n.x = c.x + (Math.random()-.5)*50; n.y = c.y + (Math.random()-.5)*50; } });
+  sim.nodes(nodes);
+  sim.force("link").links(links);
+  sim.force("x").x(d => centers[d.key].x);
+  sim.force("y").y(d => centers[d.key].y);
+  if(reduced){ sim.alpha(1); for(let i=0;i<320;i++) sim.tick(); sim.stop(); }
+  else if(restart) sim.alpha(.85).restart();
+  $("status").textContent = `${nodes.filter(n=>n.a!=="event").length} models, ${links.length} links`;
+  renderSide(); renderLegend(); updateTourPos();
+}
+
+/* ---------- interaction ---------- */
+function nodeAt(px, py){
+  const [x,y] = T.invert([px,py]);
+  let best = null, bd = Infinity;
+  nodes.forEach(n => { const d = Math.hypot(n.x-x, n.y-y); if(d < rOf(n) + 8/T.k && d < bd){ bd = d; best = n; } });
+  return best;
+}
+d3.select(cv)
+  .call(d3.drag()
+    .subject(e => { const n = nodeAt(e.x, e.y); return n ? {x:T.applyX(n.x), y:T.applyY(n.y), n} : null; })
+    .on("start", e => { stopTour(); if(!e.active) sim.alphaTarget(.2).restart(); e.subject.n.fx = e.subject.n.x; e.subject.n.fy = e.subject.n.y; })
+    .on("drag", e => { const [x,y] = T.invert([e.x,e.y]); e.subject.n.fx = x; e.subject.n.fy = y; })
+    .on("end", e => { if(!e.active) sim.alphaTarget(0); e.subject.n.fx = null; e.subject.n.fy = null; }))
+  .call(zoom).on("dblclick.zoom", null);
+cv.addEventListener("pointermove", e => {
+  const r = cv.getBoundingClientRect(), n = nodeAt(e.clientX - r.left, e.clientY - r.top);
+  const id = n ? n.id : null;
+  if(id !== S.hover){ S.hover = id; cv.classList.toggle("hand", !!n); renderReadout(); }
+});
+cv.addEventListener("pointerleave", () => { S.hover = null; renderReadout(); });
+cv.addEventListener("click", e => {
+  const r = cv.getBoundingClientRect(), n = nodeAt(e.clientX - r.left, e.clientY - r.top);
+  stopTour(); select(n ? (S.sel === n.id ? null : n.id) : null);
+});
+
+function select(id, {fly=false} = {}){
+  S.sel = id; renderReadout(); updateTourPos();
+  if(id && fly){
+    const n = nodes.find(x => x.id === id); if(!n) return;
+    const k = Math.max(T.k, base.k * 1.6);
+    const t = d3.zoomIdentity.translate(W/2 - n.x*k, H/2 - n.y*k).scale(k);
+    d3.select(cv).transition().duration(reduced ? 0 : 900).ease(d3.easeCubicInOut).call(zoom.transform, t);
+  }
+}
+
+/* ---------- drawing ---------- */
+function focusSet(){
+  const f = S.hover || S.sel; if(!f) return null;
+  const it = byId[f]; return new Set([f, ...it.l, ...it.kids]);
+}
+function matchSet(){
+  if(!S.q) return null;
+  return new Set(nodes.filter(n => (n.n+" "+n.o).toLowerCase().includes(S.q)).map(n => n.id));
+}
+function alphaHex(hex, a){
+  if(hex.startsWith("rgb")) return hex.replace("rgb(", "rgba(").replace(")", `,${a})`);
+  const n = parseInt(hex.slice(1), 16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+}
+
+function draw(now){
+  const fs = focusSet(), ms = matchSet(), focus = S.hover || S.sel;
+  const vis = n => fs ? fs.has(n.id) : ms ? ms.has(n.id) : true;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle = P.bg; ctx.fillRect(0,0,W,H);
+
+  // grid in world space
+  const [x0,y0] = T.invert([0,0]), [x1,y1] = T.invert([W,H]);
+  const step = UNIT * (T.k < .55 ? 2 : 1);
+  ctx.setTransform(DPR*T.k,0,0,DPR*T.k,DPR*T.x,DPR*T.y);
+  ctx.strokeStyle = P.grid; ctx.lineWidth = 1/T.k; ctx.beginPath();
+  for(let x = Math.floor(x0/step)*step; x <= x1; x += step){ ctx.moveTo(x,y0); ctx.lineTo(x,y1); }
+  for(let y = Math.floor(y0/step)*step; y <= y1; y += step){ ctx.moveTo(x0,y); ctx.lineTo(x1,y); }
+  ctx.stroke();
+
+  // particle clouds
+  ctx.globalCompositeOperation = P.blend;
+  const hs = S.halo * 1.25;
+  if(hs > 0){
+    nodes.forEach(n => {
+      const c = colOf(n), on = vis(n), sig = (14 + rOf(n)*2.6) * (0.55 + S.halo*0.9);
+      const cnt = Math.min(n.pts.length, Math.round(n.pts.length * hs));
+      ctx.fillStyle = alphaHex(c, (on ? P.halo : P.halo*0.18));
+      for(let i=0;i<cnt;i++){
+        const p = n.pts[i], s = p[2] / Math.max(.8, T.k*.9);
+        ctx.fillRect(n.x + p[0]*sig, n.y + p[1]*sig, s*1.6, s*1.6);
+      }
+    });
+  }
+  ctx.globalCompositeOperation = "source-over";
+
+  // edges
+  links.forEach(l => {
+    const s = l.source, t = l.target;
+    const hl = focus && (s.id === focus || t.id === focus);
+    const a = hl ? 0.95 : fs ? 0.04 : ms ? 0.06 : 0.30;
+    const g = ctx.createLinearGradient(s.x, s.y, t.x, t.y);
+    g.addColorStop(0, alphaHex(colOf(s), a)); g.addColorStop(1, alphaHex(colOf(t), a));
+    ctx.strokeStyle = hl ? `rgba(${P.edge},${a})` : g;
+    ctx.lineWidth = (hl ? 1.6 : 0.9) / Math.min(T.k, 1.6);
+    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+    if(hl && !reduced){
+      const ph = ((now/1600) + (s.index*0.13)) % 1;
+      const px = s.x + (t.x - s.x)*ph, py = s.y + (t.y - s.y)*ph;
+      ctx.fillStyle = colOf(t); ctx.beginPath(); ctx.arc(px, py, 2.4/Math.min(T.k,1.6), 0, Math.PI*2); ctx.fill();
+    }
+  });
+
+  // nodes
+  nodes.forEach(n => {
+    const c = colOf(n), on = vis(n), r = rOf(n);
+    ctx.globalAlpha = on ? 1 : 0.14;
+    if(P.glow && on){
+      const gr = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r*3.4);
+      gr.addColorStop(0, alphaHex(c, n.id === S.sel ? .55 : .32)); gr.addColorStop(1, alphaHex(c, 0));
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(n.x, n.y, r*3.4, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+    if(n.w === "open" || n.a === "event"){
+      const gr = ctx.createRadialGradient(n.x - r*.35, n.y - r*.35, r*.1, n.x, n.y, r);
+      gr.addColorStop(0, themeName()==="dark" ? "#FFFFFF" : alphaHex(c,.75)); gr.addColorStop(.45, c); gr.addColorStop(1, c);
+      ctx.fillStyle = gr; ctx.fill();
+    } else {
+      ctx.fillStyle = P.bg; ctx.fill();
+      ctx.strokeStyle = c; ctx.lineWidth = 1.8; ctx.stroke();
+    }
+    if(n.id === S.sel){ ctx.strokeStyle = P.ink; ctx.lineWidth = 1.6/T.k; ctx.beginPath(); ctx.arc(n.x, n.y, r + 4/T.k + 2, 0, Math.PI*2); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  });
+
+  // screen-space labels
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.textBaseline = "middle";
+  const minDeg = S.allLabels ? 0 : T.k > base.k*2.2 ? 0 : T.k > base.k*1.4 ? 2 : 3;
+  nodes.forEach(n => {
+    const big = n.id === S.sel || n.id === S.hover;
+    const show = big || (fs ? fs.has(n.id) : ms ? ms.has(n.id) : n.deg >= minDeg);
+    if(!show) return;
+    const sx = T.applyX(n.x), sy = T.applyY(n.y), off = rOf(n)*T.k + 7;
+    if(sx < -100 || sx > W+20 || sy < -20 || sy > H+20) return;
+    if(big){
+      ctx.font = '600 15px "Inter Tight", system-ui, sans-serif';
+      const lw = Math.max(ctx.measureText(n.n).width, 150) + 14;
+      ctx.fillStyle = P.pill; rr(sx + off - 5, sy - 20, lw, 40, 6); ctx.fill();
+      ctx.fillStyle = P.ink; ctx.fillText(n.n.replace(/[“”]/g,""), sx + off + 2, sy - 8);
+      ctx.font = '400 11px "JetBrains Mono", monospace';
+      ctx.fillStyle = P.ink2; ctx.fillText(`${n.yr}  ${n.deg} links  ${SHORT.arch[n.a]}`, sx + off + 2, sy + 9);
+    } else {
+      ctx.font = '400 10.5px "JetBrains Mono", monospace';
+      ctx.fillStyle = (fs || ms) ? P.ink : P.ink2;
+      ctx.fillText(n.n.replace(/[“”]/g,""), sx + off, sy);
+    }
+  });
+
+  // cluster pills
+  ctx.font = '500 12px "JetBrains Mono", monospace';
+  groups.forEach(g => {
+    const m = nodes.filter(n => n.key === g.key); if(!m.length) return;
+    const cx = T.applyX(d3.mean(m, n => n.x)), cy = T.applyY(d3.min(m, n => n.y)) - 26;
+    const label = SHORT[S.mode][g.key], w = ctx.measureText(label).width + 20;
+    ctx.globalAlpha = fs ? 0.35 : 1;
+    ctx.fillStyle = P.pill; ctx.strokeStyle = P.pillB; ctx.lineWidth = 1;
+    rr(cx - w/2, cy - 12, w, 24, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = groupCol(g.key); ctx.fillRect(cx - w/2 + 8, cy - 3, 6, 6);
+    ctx.fillStyle = P.ink; ctx.textAlign = "left"; ctx.fillText(label, cx - w/2 + 18 - 2, cy + 1);
+    ctx.globalAlpha = 1;
+  });
+
+  // axis numbers
+  ctx.font = '400 10.5px "JetBrains Mono", monospace'; ctx.fillStyle = P.axis;
+  const ax = UNIT * (T.k < .55 ? 4 : 2);
+  for(let x = Math.ceil(x0/ax)*ax; x <= x1; x += ax){
+    const sx = T.applyX(x); if(sx < 40) continue;
+    ctx.textAlign = "center"; ctx.fillText(String(Math.round((x - VW/2)/UNIT) || 0), sx, H - 12);
+  }
+  for(let y = Math.ceil(y0/ax)*ax; y <= y1; y += ax){
+    const sy = T.applyY(y); if(sy > H - 30 || sy < 20) continue;
+    ctx.textAlign = "left"; ctx.fillText(String(Math.round(-(y - VH/2)/UNIT) || 0), 14, sy - 8);
+  }
+  ctx.textAlign = "left";
+  requestAnimationFrame(draw);
+}
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+/* ---------- side panel ---------- */
+function relBtn(id){ const o = byId[id]; const n = nodes.find(x => x.id === id) || Object.assign({}, o, {key:keyOf(o)}); return `<button data-go="${o.id}" style="--c:${colOf(n)}"><i></i>${o.n}</button>`; }
+function renderReadout(){
+  const id = S.hover || S.sel, el = $("readout");
+  if(!id){
+    el.innerHTML = `<p class="rname"><i></i>—</p><p class="rcoord">x <b>—</b>&nbsp;&nbsp; y <b>—</b></p><p class="rdesc">Hover a point to read it, click to pin it. Each point is a model; the clouds around it are density, weighted by how connected it is.</p>`;
+    return;
+  }
+  const n = nodes.find(x => x.id === id);
+  if(!n){ el.innerHTML = ""; return; }
+  const xs = ((n.x - VW/2)/UNIT).toFixed(2), ys = (-(n.y - VH/2)/UNIT).toFixed(2);
+  const pinned = id === S.sel;
+  const tr = TRACKS.find(t => t.id === n.t);
+  el.innerHTML = `<p class="rname" style="--c:${colOf(n)}"><i></i>${n.n}</p>
+    <p class="rcoord">x <b>${xs}</b>&nbsp;&nbsp; y <b>${ys}</b>&nbsp;&nbsp; ${fmtDate(n).toLowerCase()}</p>
+    <p class="rorg">${n.o}</p>
+    <div class="rtags"><span>${ARCH[n.a].toLowerCase()}</span><span>${tr.name.toLowerCase()}</span>${n.a!=="event"?`<span>${WTS[n.w].toLowerCase()}</span>`:""}</div>
+    <p class="rdesc">${n.desc}</p>
+    ${pinned && n.l.length ? `<p class="rlab">BUILDS ON</p><div class="rels">${n.l.map(relBtn).join("")}</div>` : ""}
+    ${pinned && n.kids.length ? `<p class="rlab">LED TO</p><div class="rels">${n.kids.map(relBtn).join("")}</div>` : ""}
+    ${pinned ? `<button class="clear" data-clear>unpin</button>` : `<p class="hint">click to pin and see lineage</p>`}`;
+}
+$("readout").addEventListener("click", e => {
+  const g = e.target.closest("[data-go]");
+  if(g){ const id = g.dataset.go; if(!S.events && byId[id].a === "event"){ S.events = true; $("events").checked = true; build(); } stopTour(); select(id, {fly:true}); }
+  if(e.target.closest("[data-clear]")) select(null);
+});
+
+function renderSide(){
+  $("modeHint").textContent = HINTS[S.mode];
+  const counts = groups.map(g => ({key:g.key, n:nodes.filter(n => n.key === g.key).length}));
+  const max = d3.max(counts, c => c.n) || 1;
+  const cross = links.filter(l => l.source.key !== l.target.key);
+  const flows = d3.rollups(cross, v => v.length, l => l.source.key+"|"+l.target.key).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  $("stats").innerHTML = `<h2>CLUSTERS</h2>
+    <div class="rows">${counts.map(c => `<button class="crow" data-key="${c.key}" style="--c:${groupCol(c.key)}"><i></i><span class="n">${SHORT[S.mode][c.key]}</span><b>${c.n}</b><span class="bar"><span style="width:${c.n/max*100}%"></span></span></button>`).join("")}</div>
+    <p class="rlab" style="margin-top:22px">CROSSING LINKS <span style="color:var(--ink2);letter-spacing:0">${cross.length} / ${links.length}</span></p>
+    ${flows.map(([k,v]) => { const [a,b] = k.split("|"); return `<div class="flow"><span><i style="--c:${groupCol(a)}"></i>${SHORT[S.mode][a]} → <i style="--c:${groupCol(b)}"></i>${SHORT[S.mode][b]}</span><b>${v}</b></div>`; }).join("")}`;
+}
+$("stats").addEventListener("click", e => { const b = e.target.closest(".crow"); if(b) spotlight(b.dataset.key); });
+function spotlight(key){
+  stopTour();
+  const m = nodes.filter(n => n.key === key);
+  const cx = d3.mean(m, n => n.x), cy = d3.mean(m, n => n.y);
+  const r = d3.max(m, n => Math.hypot(n.x-cx, n.y-cy)) + 90;
+  const k = Math.max(.5, Math.min(3, Math.min(W,H) / (2*r)));
+  d3.select(cv).transition().duration(reduced ? 0 : 800).ease(d3.easeCubicInOut).call(zoom.transform, d3.zoomIdentity.translate(W/2 - cx*k, H/2 - cy*k).scale(k));
+}
+
+function renderLegend(){
+  const el = $("legend");
+  if(S.color === "year"){
+    const stops = P.years.map((c,i) => `${c} ${i/(P.years.length-1)*100}%`).join(",");
+    el.innerHTML = `<div class="gradbar"><div class="ticks"><span>2026</span><span>2024</span><span>2022</span><span>2020</span><span>2018</span><span>2016</span></div><div class="bar" style="background:linear-gradient(to top, ${stops})"></div></div>`;
+  } else {
+    el.innerHTML = groups.map(g => `<button data-key="${g.key}" style="--c:${groupCol(g.key)}">${SHORT[S.mode][g.key]}<i></i></button>`).join("");
+  }
+}
+$("legend").addEventListener("click", e => { const b = e.target.closest("[data-key]"); if(b) spotlight(b.dataset.key); });
+
+/* ---------- tour ---------- */
+const tourSeq = () => nodes.slice().sort((a,b) => a.t0 - b.t0);
+function updateTourPos(){
+  const s = tourSeq(), i = s.findIndex(n => n.id === S.sel);
+  $("tourPos").textContent = i >= 0 ? `${String(i+1).padStart(2,"0")} / ${s.length}  ${s[i].yr}` : `— / ${s.length}`;
+}
+function setTourUI(){
+  $("tourLabel").textContent = S.touring ? "Pause" : "Tour";
+  $("tourIcon").innerHTML = S.touring ? '<path d="M2 1h3v10H2zM7 1h3v10H7z"/>' : '<path d="M2 1l9 5-9 5z"/>';
+}
+function stepTour(){
+  const s = tourSeq(); let i = s.findIndex(n => n.id === S.sel) + 1;
+  if(i >= s.length){ stopTour(); return; }
+  select(s[i].id, {fly:true});
+}
+function stopTour(){ if(!S.touring) return; S.touring = false; clearInterval(S.timer); setTourUI(); }
+$("tour").addEventListener("click", () => {
+  if(S.touring) return stopTour();
+  const s = tourSeq(); if(S.sel && s[s.length-1].id === S.sel) S.sel = null;
+  S.touring = true; setTourUI(); stepTour();
+  S.timer = setInterval(stepTour, 2600);
+});
+
+/* ---------- controls ---------- */
+document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => {
+  S.mode = b.dataset.mode;
+  document.querySelectorAll("[data-mode]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  build(); renderReadout();
+}));
+document.querySelectorAll("[data-color]").forEach(b => b.addEventListener("click", () => {
+  S.color = b.dataset.color;
+  document.querySelectorAll("[data-color]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderLegend(); renderReadout();
+}));
+$("spread").addEventListener("input", e => {
+  S.spread = e.target.value/100; $("spreadV").textContent = e.target.value;
+  computeCenters(); sim.force("x").x(d => centers[d.key].x); sim.force("y").y(d => centers[d.key].y);
+  if(reduced){ for(let i=0;i<200;i++) sim.tick(); } else sim.alpha(.5).restart();
+});
+$("halo").addEventListener("input", e => { S.halo = e.target.value/100; $("haloV").textContent = e.target.value; });
+$("q").addEventListener("input", e => { S.q = e.target.value.trim().toLowerCase(); });
+$("labels").addEventListener("change", e => { S.allLabels = e.target.checked; });
+$("events").addEventListener("change", e => {
+  S.events = e.target.checked;
+  if(!S.events && S.sel && byId[S.sel].a === "event") S.sel = null;
+  build(); renderReadout();
+});
+$("fit").addEventListener("click", () => { stopTour(); d3.select(cv).transition().duration(reduced ? 0 : 600).call(zoom.transform, base); });
+$("theme").addEventListener("click", () => {
+  document.documentElement.dataset.theme = themeName() === "dark" ? "light" : "dark";
+  refreshPalette(); renderSide(); renderLegend(); renderReadout();
+});
+mq.addEventListener("change", () => { refreshPalette(); renderSide(); renderLegend(); renderReadout(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape"){ stopTour(); select(null); } });
+let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { size(); computeCenters(); sim.force("x").x(d => centers[d.key].x); sim.force("y").y(d => centers[d.key].y); sim.alpha(.4).restart(); }, 120); }).observe(stage);
+
+size();
+build();
+renderReadout();
+requestAnimationFrame(draw);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => renderReadout());
+</script>
+</body>
+</html>
