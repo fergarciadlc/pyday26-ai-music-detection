@@ -1,0 +1,27 @@
+[project]
+name = "pyday26-ai-music-detection"
+version = "0.1.0"
+description = "Companion website and material for the PyDay México 2026 talk «¿Suena a IA? Detección de música generada por IA»"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = []
+
+[dependency-groups]
+# Static site (MkDocs Material)
+site = [
+    "mkdocs-material>=9.5",
+]
+# Scripts that precompute the site's audio and data
+audio = [
+    "librosa>=0.10",
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "soundfile>=0.12",
+    "torch>=2.2",
+    "transformers>=4.40",
+]
+
+[tool.uv]
+default-groups = ["site"]
+package = false

@@ -1,0 +1,72 @@
+site_name: ¿Suena a IA?
+site_description: Detección de música generada por inteligencia artificial · PyDay México 2026
+site_author: Fernando García de la Cruz
+site_url: https://fergarciadlc.github.io/pyday26-ai-music-detection/
+repo_url: https://github.com/fergarciadlc/pyday26-ai-music-detection
+repo_name: fergarciadlc/pyday26-ai-music-detection
+copyright: Fernando García de la Cruz · PyDay México 2026
+
+nav:
+  - Inicio: index.md
+  - ¿Cuál es IA?: quiz.md
+  - Fakeprints: fakeprints.md
+  - Recursos: recursos.md
+
+theme:
+  name: material
+  language: es
+  font:
+    text: Outfit
+    code: JetBrains Mono
+  icon:
+    logo: material/waveform
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Modo oscuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+  features:
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
+
+extra_css:
+  - assets/css/pyday.css
+extra_javascript:
+  - assets/js/quiz.js
+  - assets/js/fakeprints.js
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/fergarciadlc
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/fergarciadlc
+    - icon: material/web
+      link: https://fergarciadlc.com
